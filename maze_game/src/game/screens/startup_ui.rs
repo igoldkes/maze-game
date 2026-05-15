@@ -131,6 +131,11 @@ pub fn draw_startup_overlay(
             ];
             let n = if progress.has_saved_records() { 4 } else { 3 };
             for i in 0..n {
+                if n == 3 {
+                    if i == 1 {
+                        continue;
+                    }
+                }
                 let ry = row0_y + i as f32 * row_h;
                 if menu_role == i {
                     draw_rectangle(
