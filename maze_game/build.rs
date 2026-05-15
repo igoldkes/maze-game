@@ -1,7 +1,9 @@
 fn main() {
-    let mut res = winres::WindowsResource::new();
-
-    res.set_icon("assets/maze-game_icon.ico");
-
-    res.compile().unwrap();
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+        #[cfg(target_os = "windows")]
+        {
+            let mut res = winres::WindowsResource::new();
+            res.compile().unwrap();
+        }
+    }
 }
