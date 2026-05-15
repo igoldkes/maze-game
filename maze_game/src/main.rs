@@ -1,5 +1,7 @@
 //! Entry: `mod maze` + `mod game` (Macroquad loop).
 
+#![windows_subsystem = "windows"]
+
 use macroquad::prelude::*;
 
 mod game;
