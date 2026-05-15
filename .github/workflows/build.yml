@@ -36,6 +36,10 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install darwin
+        working-directory: maze_game
+        run: rustup target add x86_64-apple-darwin
+
       - name: Build
         working-directory: maze_game
         run: cargo build --release --target x86_64-apple-darwin
