@@ -1,0 +1,16 @@
+[package]
+name = "maze_game"
+version = "0.3.0"
+edition = "2021"
+rust-version = "1.70"
+
+[dependencies]
+# Pin to 0.4.8: newer 0.4.x releases require a newer rustc for const float ops in `macroquad::Color`.
+macroquad = { version = "=0.4.8", features = ["audio"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dirs = "5.0"
+rand = "0.8.5"
+
+[profile.dev.package."*"]
+opt-level = 3
