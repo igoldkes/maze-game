@@ -49,5 +49,5 @@ jobs:
         with:
           name: macos-build
           path: |
-            maze_game/target/release/maze_game
-            maze_game/assets/
+            target/**/release/maze_game
+            assets/
