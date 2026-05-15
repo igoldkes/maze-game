@@ -23,7 +23,7 @@ jobs:
         with:
           name: windows-build
           path: |
-            target/release/maze_game.exe
+            target/release/maze-game.exe
             assets/
 
   build-macos:
@@ -43,5 +43,5 @@ jobs:
         with:
           name: macos-build
           path: |
-            target/release/maze_game
+            target/release/maze-game
             assets/
