@@ -1429,9 +1429,13 @@ impl GameState {
                             self.startup = StartupState::AskDevPassword;
                         }
                         2 => {
-                            self.startup_records_scroll = 0;
-                            self.startup_records_selected = 0;
-                            self.startup = StartupState::ViewRecords;
+                            if !self.progress.has_saved_records() {
+                                std::process::exit(0);
+                            } else {
+                                self.startup_records_scroll = 0;
+                                self.startup_records_selected = 0;
+                                self.startup = StartupState::ViewRecords;
+                            }
                         }
                         3 => {
                             std::process::exit(0);

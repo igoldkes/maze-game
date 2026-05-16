@@ -123,38 +123,63 @@ pub fn draw_startup_overlay(
                 palette.text_primary,
             );
             let row0_y = y + 92.0 * scale;
-            let labels: [&str; 4] = [
-                "Player Mode",
-                "Developer / Test Mode (password)",
-                "Previous Records (cleared mazes on this computer)",
-                "Exit Game",
-            ];
             let n = if progress.has_saved_records() { 4 } else { 3 };
-            for i in 0..n {
-                if n == 3 {
-                    if i == 1 {
-                        continue;
+
+            if n == 4 {
+                let labels: [&str; 4] = [
+                    "Player Mode",
+                    "Developer / Test Mode (password)",
+                    "Previous Records (cleared mazes on this computer)",
+                    "Exit Game",
+                ];
+                for i in 0..n {
+                    let ry = row0_y + i as f32 * row_h;
+                    if menu_role == i {
+                        draw_rectangle(
+                            x + row_pad_x,
+                            ry - 15.0 * scale,
+                            row_bg_w,
+                            row_h,
+                            Color::from_rgba(88, 94, 118, 235),
+                        );
                     }
-                }
-                let ry = row0_y + i as f32 * row_h;
-                if menu_role == i {
-                    draw_rectangle(
-                        x + row_pad_x,
-                        ry - 15.0 * scale,
-                        row_bg_w,
-                        row_h,
-                        Color::from_rgba(88, 94, 118, 235),
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
                     );
                 }
-                let label = labels[i];
-                draw_text(
-                    label,
-                    x + row_pad_x + 10.0 * scale,
-                    ry + 8.0 * scale,
-                    ty.body,
-                    palette.text_primary,
-                );
+            } else {
+                                let labels: [&str; 3] = [
+                    "Player Mode",
+                    "Developer / Test Mode (password)",
+                    "Exit Game",
+                ];
+                for i in 0..n {
+                    let ry = row0_y + i as f32 * row_h;
+                    if menu_role == i {
+                        draw_rectangle(
+                            x + row_pad_x,
+                            ry - 15.0 * scale,
+                            row_bg_w,
+                            row_h,
+                            Color::from_rgba(88, 94, 118, 235),
+                        );
+                    }
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                }
             }
+            
             draw_text(
                 "↑ ↓ select · Enter confirm · Esc back",
                 x + 20.0,
