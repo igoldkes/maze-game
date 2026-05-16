@@ -7,7 +7,7 @@
 use crate::maze::{Maze, Walls};
 
 use macroquad::prelude::*;
-use macroquad::audio::{load_sound, play_sound_once, stop_sound, Sound};
+use macroquad::audio::{load_sound, play_sound_once, Sound};
 use macroquad::rand::gen_range;
 
 /// Player in world space. Uses a **bird’s-eye** hat texture (see `assets.rs` / `assets/`).

@@ -994,7 +994,7 @@ impl GameState {
         match self.end_menu {
             EndMenuState::Hidden => {}
             EndMenuState::WinCelebration => {
-                if is_key_pressed(KeyCode::Up) {
+                if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.win_menu_selection == 0 {
                         play_sound_once(&self.click_sound);
                         self.win_menu_selection = 2;
@@ -1003,7 +1003,7 @@ impl GameState {
                         self.win_menu_selection = self.win_menu_selection.saturating_sub(1);
                     }
                 }
-                if is_key_pressed(KeyCode::Down) {
+                if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
                     if self.win_menu_selection == 2 {
                         play_sound_once(&self.click_sound);
                         self.win_menu_selection = 0;
@@ -1387,7 +1387,7 @@ impl GameState {
                 } else {
                     3
                 };
-                if is_key_pressed(KeyCode::Up) {
+                if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.startup_menu_role == 0 {
                         play_sound_once(&self.click_sound);
                         self.startup_menu_role = n_options - 1;
@@ -1396,7 +1396,7 @@ impl GameState {
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
                 }
-                if is_key_pressed(KeyCode::Down) {
+                if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
                     if self.startup_menu_role == n_options - 1 {
                         play_sound_once(&self.click_sound);
                         self.startup_menu_role = 0;
@@ -1445,7 +1445,7 @@ impl GameState {
                 }
             }
             StartupState::AskNewOrContinue => {
-                if is_key_pressed(KeyCode::Up) {
+                if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.startup_menu_run_type == 0 {
                         play_sound_once(&self.click_sound);
                         self.startup_menu_run_type = 1;
@@ -1454,7 +1454,7 @@ impl GameState {
                         self.startup_menu_run_type = self.startup_menu_run_type.saturating_sub(1);
                     }
                 }
-                if is_key_pressed(KeyCode::Down) {
+                if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
                     if self.startup_menu_run_type == 1 {
                         play_sound_once(&self.click_sound);
                         self.startup_menu_run_type = 0;
@@ -1528,7 +1528,7 @@ impl GameState {
                 }
             }
             StartupState::AskContinueFromLog => {
-                if is_key_pressed(KeyCode::Up) {
+                if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.startup_menu_continue == 0 {
                         play_sound_once(&self.click_sound);
                         self.startup_menu_continue = 1;
@@ -1537,7 +1537,7 @@ impl GameState {
                         self.startup_menu_continue = self.startup_menu_continue.saturating_sub(1);
                     }
                 }
-                if is_key_pressed(KeyCode::Down) {
+                if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
                     if self.startup_menu_continue == 1 {
                         play_sound_once(&self.click_sound);
                         self.startup_menu_continue = 0;
@@ -1649,11 +1649,11 @@ impl GameState {
                     self.request_startup_back(StartupPendingBack::ToAskPlayerRoleFromRecords);
                     return;
                 }
-                if is_key_pressed(KeyCode::Up) && self.startup_records_selected > 0 {
+                if (is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W)) && self.startup_records_selected > 0 {
                     play_sound_once(&self.click_sound);
                     self.startup_records_selected -= 1;
                 }
-                if is_key_pressed(KeyCode::Down) && self.startup_records_selected + 1 < recs.len() {
+                if (is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S)) && self.startup_records_selected + 1 < recs.len() {
                     play_sound_once(&self.click_sound);
                     self.startup_records_selected += 1;
                 }
