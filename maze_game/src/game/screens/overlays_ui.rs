@@ -33,10 +33,10 @@ pub fn draw_end_menu_overlay(
     } else {
         player_name.trim()
     };
-    let mut yy = y + 24.0;
+    let mut yy = y + 36.0;
     draw_text(
         &format!("Congratulations, {name}!"),
-        x + 20.0,
+        x + 14.0,
         yy,
         32.0,
         Color::from_rgba(180, 235, 190, 255),
