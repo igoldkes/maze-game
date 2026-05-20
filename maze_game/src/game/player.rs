@@ -20,6 +20,7 @@ pub struct Player {
     cell: (usize, usize),
     target_cell: (usize, usize),
     footsteps: Vec<Sound>,
+    pub footstep_settings_toggle: bool,
     pub stage: usize,
     blocked: bool,
 }
@@ -47,6 +48,7 @@ impl Player {
             cell: (cell_x, cell_y),
             target_cell: (cell_x, cell_y),
             footsteps,
+            footstep_settings_toggle: true,
             stage,
             blocked: false,
         }
@@ -142,7 +144,9 @@ impl Player {
             let step = gen_range(0, 4);
             if step != 3 {
                 if !self.blocked {
-                    play_sound_once(&self.footsteps[step]);
+                    if self.footstep_settings_toggle {
+                        play_sound_once(&self.footsteps[step]);
+                    }
                 }
             }
             dy = -1;
@@ -150,7 +154,9 @@ impl Player {
             let step = gen_range(0, 4);
             if step != 3 {
                 if !self.blocked {
-                    play_sound_once(&self.footsteps[step]);
+                    if self.footstep_settings_toggle {
+                        play_sound_once(&self.footsteps[step]);
+                    }
                 }
             }
             dy = 1;
@@ -158,7 +164,9 @@ impl Player {
             let step = gen_range(0, 4);
             if step != 3 {
                 if !self.blocked {
-                    play_sound_once(&self.footsteps[step]);
+                    if self.footstep_settings_toggle {
+                        play_sound_once(&self.footsteps[step]);
+                    }
                 }
             }
             dx = 1;
@@ -166,7 +174,9 @@ impl Player {
             let step = gen_range(0, 4);
             if step != 3 {
                 if !self.blocked {
-                    play_sound_once(&self.footsteps[step]);
+                    if self.footstep_settings_toggle {
+                        play_sound_once(&self.footsteps[step]);
+                    }
                 }
             }
             dx = -1;

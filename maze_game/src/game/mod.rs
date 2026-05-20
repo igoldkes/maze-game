@@ -51,6 +51,8 @@ enum StartupPendingBack {
     ToAskPlayerRole,
     /// Return to role menu from the records list.
     ToAskPlayerRoleFromRecords,
+    /// Return to role menu from settings.
+    ToAskPlayerRoleFromSettings,
     ToAskNewOrContinue,
     /// Re-open nickname entry (e.g. back from continue prompt).
     ToAskPlayerName,
@@ -89,6 +91,7 @@ enum StartupState {
     AskDevPassword,
     /// Saved-run list (only opened from main menu after at least one save exists).
     ViewRecords,
+    Settings,
     Done,
 }
 
@@ -136,6 +139,7 @@ pub struct GameState {
     exit_found_sound: Sound,
     paper_sound: Sound,
     rain_sound: Sound,
+    rain_sound_playing: bool,
     click_sound: Sound,
     intro_clicked: bool,
     explain_map_clicked: bool,
@@ -145,6 +149,10 @@ pub struct GameState {
     maze_music: Sound,
     menu_music: Sound,
     music_track: MusicTrack,
+    menu_music_settings_toggle: bool,
+    maze_music_settings_toggle: bool,
+    footstep_settings_toggle: bool,
+    wind_rain_settings_toggle: bool,
     is_map_open: bool,
     map_sound_played: bool,
     old_buffer_len: usize,
@@ -239,6 +247,7 @@ impl GameState {
             exit_found_sound,
             paper_sound,
             rain_sound,
+            rain_sound_playing: false,
             click_sound,
             intro_clicked: false,
             explain_map_clicked: false,
@@ -248,6 +257,10 @@ impl GameState {
             maze_music,
             menu_music,
             music_track,
+            menu_music_settings_toggle: true,
+            maze_music_settings_toggle: true,
+            footstep_settings_toggle: true,
+            wind_rain_settings_toggle: true,
             is_map_open: false,
             map_sound_played: false,
             old_buffer_len: 0,
@@ -281,6 +294,98 @@ impl GameState {
     }
 
     pub fn update(&mut self, dt: f32) {
+
+        // Music checks start here
+        if self.menu_music_settings_toggle | self.maze_music_settings_toggle {
+
+            if self.maze_music_settings_toggle {
+                if matches!(self.story, StoryPhase::Playing | StoryPhase::Won | StoryPhase::Restart) && !matches!(self.music_track, MusicTrack::Maze) {
+                    // if in a maze and maze music is not already playing, stop any other music and play maze music
+                    stop_sound(&self.menu_music);
+                    play_sound(
+                        &self.maze_music,
+                        PlaySoundParams {
+                            looped: true,
+                            volume: 1.,
+                        },
+                    );
+                    self.music_track = MusicTrack::Maze;
+                }
+            } else {
+                // if maze music is toggled off, stop maze music (instead of just letting the current loop finish)
+                stop_sound(&self.maze_music);
+                if matches!(self.music_track, MusicTrack::Maze) {
+                    // only change music track to none if maze music was playing
+                    self.music_track = MusicTrack::None;
+                }
+
+                if matches!(self.story, StoryPhase::Playing | StoryPhase::Won | StoryPhase::Restart) && !matches!(self.music_track, MusicTrack::Maze) {
+                    stop_sound(&self.menu_music);
+                    self.music_track = MusicTrack::None;
+                }
+            }
+            
+            if self.menu_music_settings_toggle {
+                if !matches!(self.story, StoryPhase::Playing | StoryPhase::Won | StoryPhase::Restart) && !matches!(self.music_track, MusicTrack::Menu) {
+                    // if not in or solved a maze, menu music should be playing; if it is not, stop any other music and play menu music
+                    stop_sound(&self.maze_music);
+                    play_sound(
+                        &self.menu_music,
+                        PlaySoundParams {
+                            looped: true,
+                            volume: 1.,
+                        },
+                    );
+                    self.music_track = MusicTrack::Menu;
+                }
+            } else {
+                // if menu music is toggled off, stop menu music (instead of just letting the current loop finish)
+                stop_sound(&self.menu_music);
+                if matches!(self.music_track, MusicTrack::Menu) {
+                    // only change music track to none if menu music was playing
+                    self.music_track = MusicTrack::None;
+                }
+
+                if !matches!(self.story, StoryPhase::Playing | StoryPhase::Won | StoryPhase::Restart) && !matches!(self.music_track, MusicTrack::Menu) {
+                    stop_sound(&self.maze_music);
+                    self.music_track = MusicTrack::None;
+                }
+            }
+
+        } else {
+            // if all music is toggled off, stop all music (instead of just letting the current loop finish)
+            stop_sound(&self.maze_music);
+            stop_sound(&self.menu_music);
+            self.music_track = MusicTrack::None;
+        }
+        // Music checks end here
+
+
+        // Wind/rain sound checks start here
+        if self.wind_rain_settings_toggle {
+            if matches!(self.story, StoryPhase::Playing | StoryPhase::Won | StoryPhase::Restart) && !self.rain_sound_playing {
+                // if wind/rain sound is toggled on, and in or solved a maze, and wind/rain sound is not already playing, then play wind/rain sound
+                play_sound(
+                    &self.rain_sound,
+                    PlaySoundParams {
+                        looped: true,
+                        volume: 0.4,
+                    },
+                );
+                self.rain_sound_playing = true;
+            } else if !matches!(self.story, StoryPhase::Playing | StoryPhase::Won | StoryPhase::Restart) && self.rain_sound_playing {
+                // if wind/rain sound is toggled on, and not in or solved a maze, and wind/rain sound is playing, then stop wind/rain sound
+                stop_sound(&self.rain_sound);
+                self.rain_sound_playing = false;
+            }
+        } else {
+            // if wind/rain sound is toggled off, stop wind/rain sound if it is playing
+            stop_sound(&self.rain_sound);
+            self.rain_sound_playing = false;
+        }
+        // Wind/rain sound checks end here
+
+
         if matches!(self.story, StoryPhase::IntroThought) && !self.intro_clicked {
             //play_sound_once(&self.click_sound);
             self.intro_clicked = true;
@@ -304,48 +409,6 @@ impl GameState {
         if matches!(self.story, StoryPhase::Playing) && !self.playing_clicked {
             play_sound_once(&self.click_sound);
             self.playing_clicked = true;
-        }
-
-        if matches!(self.story, StoryPhase::IntroThought) && !matches!(self.music_track, MusicTrack::Menu){
-            stop_sound(&self.maze_music);
-            play_sound(
-                &self.menu_music,
-                PlaySoundParams {
-                    looped: true,
-                    volume: 1.,
-                },
-            );
-            self.music_track = MusicTrack::Menu;
-        }
-
-        if matches!(self.music_track, MusicTrack::None) {
-            play_sound(
-                &self.menu_music,
-                PlaySoundParams {
-                    looped: true,
-                    volume: 1.,
-                },
-            );
-            self.music_track = MusicTrack::Menu;
-        }
-
-        if matches!(self.music_track, MusicTrack::Menu) && matches!(self.story, StoryPhase::Playing) {
-            stop_sound(&self.menu_music);
-            play_sound(
-                &self.maze_music,
-                PlaySoundParams {
-                    looped: true,
-                    volume: 1.,
-                },
-            );
-            play_sound(
-                &self.rain_sound,
-                PlaySoundParams {
-                    looped: true,
-                    volume: 0.4,
-                },
-            );
-            self.music_track = MusicTrack::Maze;
         }
 
         if !matches!(self.story, StoryPhase::Playing | StoryPhase::Won) {
@@ -554,6 +617,10 @@ impl GameState {
                 self.startup_menu_run_type,
                 self.startup_menu_continue,
                 self.startup_back_confirm,
+                self.menu_music_settings_toggle,
+                self.maze_music_settings_toggle,
+                self.footstep_settings_toggle,
+                self.wind_rain_settings_toggle,
             );
             return;
         }
@@ -1329,6 +1396,15 @@ impl GameState {
                     });
                 self.startup = StartupState::AskPlayerRole;
             }
+            StartupPendingBack::ToAskPlayerRoleFromSettings => {
+                self.reset_normal_lobby_geometry();
+                self.startup_menu_role = if self.progress.has_saved_records() {
+                        3
+                    } else {
+                        2
+                    };
+                self.startup = StartupState::AskPlayerRole;
+            }
             StartupPendingBack::ToAskNewOrContinue => {
                 self.startup_player_name_buffer.clear();
                 STARTUP_NAME_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
@@ -1383,9 +1459,9 @@ impl GameState {
             }
             StartupState::AskPlayerRole => {
                 let n_options = if self.progress.has_saved_records() {
-                    4
+                    5
                 } else {
-                    3
+                    4
                 };
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.startup_menu_role == 0 {
@@ -1412,36 +1488,74 @@ impl GameState {
                 }
                 if is_key_pressed(KeyCode::Enter) {
                     play_sound_once(&self.click_sound);
-                    match self.startup_menu_role {
-                        0 => {
-                            self.easy_test_map = false;
-                            self.reset_normal_lobby_geometry();
-                            self.player_name.clear();
-                            self.startup_player_name_buffer.clear();
-                            self.startup_continue_next_stage = None;
-                            self.startup_continue_max_cleared = None;
-                            self.startup_menu_run_type = 0;
-                            self.startup = StartupState::AskNewOrContinue;
-                        }
-                        1 => {
-                            self.password_buffer.clear();
-                            STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
-                            self.startup = StartupState::AskDevPassword;
-                        }
-                        2 => {
-                            if !self.progress.has_saved_records() {
-                                std::process::exit(0);
-                            } else {
+                    if self.progress.has_saved_records() {
+                        match self.startup_menu_role {
+                            0 => {
+                                // Player Mode
+                                self.easy_test_map = false;
+                                self.reset_normal_lobby_geometry();
+                                self.player_name.clear();
+                                self.startup_player_name_buffer.clear();
+                                self.startup_continue_next_stage = None;
+                                self.startup_continue_max_cleared = None;
+                                self.startup_menu_run_type = 0;
+                                self.startup = StartupState::AskNewOrContinue;
+                            }
+                            1 => {
+                                // Developer Mode
+                                self.password_buffer.clear();
+                                STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
+                                self.startup = StartupState::AskDevPassword;
+                            }
+                            2 => {
+                                // View Records
                                 self.startup_records_scroll = 0;
                                 self.startup_records_selected = 0;
                                 self.startup = StartupState::ViewRecords;
                             }
+                            3 => {
+                                // Settings
+                                self.startup_menu_role = 0;
+                                self.startup = StartupState::Settings;
+                            }
+                            4 => {
+                                // Exit Game
+                                std::process::exit(0);
+                            }
+                            _ => {}
                         }
-                        3 => {
-                            std::process::exit(0);
+                    } else {
+                        match self.startup_menu_role {
+                            0 => {
+                                // Player Mode
+                                self.easy_test_map = false;
+                                self.reset_normal_lobby_geometry();
+                                self.player_name.clear();
+                                self.startup_player_name_buffer.clear();
+                                self.startup_continue_next_stage = None;
+                                self.startup_continue_max_cleared = None;
+                                self.startup_menu_run_type = 0;
+                                self.startup = StartupState::AskNewOrContinue;
+                            }
+                            1 => {
+                                // Developer Mode
+                                self.password_buffer.clear();
+                                STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
+                                self.startup = StartupState::AskDevPassword;
+                            }
+                            2 => {
+                                // Settings
+                                self.startup_menu_role = 0;
+                                self.startup = StartupState::Settings;
+                            }
+                            3 => {
+                                // Exit Game
+                                std::process::exit(0);
+                            }
+                            _ => {}
                         }
-                        _ => {}
                     }
+                    
                 }
             }
             StartupState::AskNewOrContinue => {
@@ -1677,7 +1791,57 @@ impl GameState {
                     }
                 }
             }
+            StartupState::Settings => {
+                if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
+                    if self.startup_menu_role == 0 {
+                        play_sound_once(&self.click_sound);
+                        self.startup_menu_role = 3;
+                    } else {
+                        play_sound_once(&self.click_sound);
+                        self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
+                    }
+                }
+                if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
+                    if self.startup_menu_role == 3 {
+                        play_sound_once(&self.click_sound);
+                        self.startup_menu_role = 0;
+                    } else {
+                        play_sound_once(&self.click_sound);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(3);
+                    }
+                }
+                if is_key_pressed(KeyCode::Escape) {
+                    play_sound_once(&self.click_sound);
+                    self.request_startup_back(StartupPendingBack::ToAskPlayerRoleFromSettings);
+                    return;
+                }
+
+                if is_key_pressed(KeyCode::Enter) {
+                    play_sound_once(&self.click_sound);
+                    match self.startup_menu_role {
+                        0 => {
+                            // Toggle menu music on/off
+                            self.menu_music_settings_toggle = !self.menu_music_settings_toggle;
+                        }
+                        1 => {
+                            // Toggle maze music on/off
+                            self.maze_music_settings_toggle = !self.maze_music_settings_toggle;
+                        }
+                        2 => {
+                            // Toggle sfx on/off
+                            self.footstep_settings_toggle = !self.footstep_settings_toggle;
+                            self.player.footstep_settings_toggle = self.footstep_settings_toggle;
+                        }
+                        3 => {
+                            // Toggle wind/rain on/off
+                            self.wind_rain_settings_toggle = !self.wind_rain_settings_toggle;
+                        }
+                        _ => {}
+                    }
+                }
+            }
             StartupState::Done => {}
+            
         }
     }
 
