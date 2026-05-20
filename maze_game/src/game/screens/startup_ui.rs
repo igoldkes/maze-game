@@ -55,9 +55,9 @@ pub fn draw_startup_overlay(
         StartupState::AskNewOrContinue => 280.0,
         StartupState::AskPlayerRole => {
             if progress.has_saved_records() {
-                340.0
-            } else {
                 300.0
+            } else {
+                260.0
             }
         }
         StartupState::AskPlayerName
@@ -130,12 +130,11 @@ pub fn draw_startup_overlay(
                 palette.text_primary,
             );
             let row0_y = y + 92.0 * scale;
-            let n = if progress.has_saved_records() { 5 } else { 4 };
+            let n = if progress.has_saved_records() { 4 } else { 3 };
 
-            if n == 5 {
-                let labels: [&str; 5] = [
+            if n == 4 {
+                let labels: [&str; 4] = [
                     "Player Mode",
-                    "Developer / Test Mode (password)",
                     "Previous Records (cleared mazes on this computer)",
                     "Settings",
                     "Exit Game",
@@ -161,9 +160,8 @@ pub fn draw_startup_overlay(
                     );
                 }
             } else {
-                    let labels: [&str; 4] = [
+                    let labels: [&str; 3] = [
                     "Player Mode",
-                    "Developer / Test Mode (password)",
                     "Settings",
                     "Exit Game",
                 ];

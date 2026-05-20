@@ -1516,9 +1516,9 @@ impl GameState {
             }
             StartupState::AskPlayerRole => {
                 let n_options = if self.progress.has_saved_records() {
-                    5
-                } else {
                     4
+                } else {
+                    3
                 };
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.startup_menu_role == 0 {
@@ -1570,24 +1570,24 @@ impl GameState {
                                 self.startup_menu_run_type = 0;
                                 self.startup = StartupState::AskNewOrContinue;
                             }
-                            1 => {
+                            //1 => {
                                 // Developer Mode
-                                self.password_buffer.clear();
-                                STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
-                                self.startup = StartupState::AskDevPassword;
-                            }
-                            2 => {
+                            //    self.password_buffer.clear();
+                            //    STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
+                            //    self.startup = StartupState::AskDevPassword;
+                            //}
+                            1 => {
                                 // View Records
                                 self.startup_records_scroll = 0;
                                 self.startup_records_selected = 0;
                                 self.startup = StartupState::ViewRecords;
                             }
-                            3 => {
+                            2 => {
                                 // Settings
                                 self.startup_menu_role = 0;
                                 self.startup = StartupState::Settings;
                             }
-                            4 => {
+                            3 => {
                                 // Exit Game
                                 std::process::exit(0);
                             }
@@ -1606,18 +1606,18 @@ impl GameState {
                                 self.startup_menu_run_type = 0;
                                 self.startup = StartupState::AskNewOrContinue;
                             }
-                            1 => {
+                            //1 => {
                                 // Developer Mode
-                                self.password_buffer.clear();
-                                STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
-                                self.startup = StartupState::AskDevPassword;
-                            }
-                            2 => {
+                            //    self.password_buffer.clear();
+                            //    STARTUP_DEV_PASSWORD_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
+                            //    self.startup = StartupState::AskDevPassword;
+                            //}
+                            1 => {
                                 // Settings
                                 self.startup_menu_role = 0;
                                 self.startup = StartupState::Settings;
                             }
-                            3 => {
+                            2 => {
                                 // Exit Game
                                 std::process::exit(0);
                             }
