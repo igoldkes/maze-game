@@ -29,6 +29,7 @@ pub fn draw_startup_overlay(
     maze_music_settings_toggle: bool,
     footstep_settings_toggle: bool,
     wind_rain_settings_toggle: bool,
+    menu_clicks_settings_toggle: bool,
 ) {
     let w = screen_width();
     let h = screen_height();
@@ -63,7 +64,7 @@ pub fn draw_startup_overlay(
         | StartupState::AskContinueFromLog
         | StartupState::NicknameMustChangeNotice
         | StartupState::ContinueNoRecordNotice => 300.0,
-        StartupState::Settings => 260.0,
+        StartupState::Settings => 300.0,
         _ => 220.0,
     };
     let pw = 760.0 * scale;
@@ -422,13 +423,14 @@ pub fn draw_startup_overlay(
                 palette.text_primary,
             );
             let row0_y = y + 92.0 * scale;
-            let labels: [&str; 4] = [
+            let labels: [&str; 5] = [
                     "Menu Music",
                     "Maze Music",
                     "Footsteps",
                     "Wind and Rain",
+                    "Menu Clicks",
                 ];
-            for i in 0..4 {
+            for i in 0..5 {
                 let ry = row0_y + i as f32 * row_h;
                 if menu_role == i {
                     draw_rectangle(
@@ -450,13 +452,14 @@ pub fn draw_startup_overlay(
             }
             
             let row0_y_opt = y + 92.0 * scale;
-            let labels: [&str; 4] = [
+            let labels: [&str; 5] = [
                     if menu_music_settings_toggle { "On" } else { "Off" },
                     if maze_music_settings_toggle { "On" } else { "Off" },
                     if footstep_settings_toggle { "On" } else { "Off" },
                     if wind_rain_settings_toggle { "On" } else { "Off" },
+                    if menu_clicks_settings_toggle { "On" } else { "Off" },
             ];
-            for i in 0..4 {
+            for i in 0..5 {
                 let ry = row0_y_opt + i as f32 * row_h;
                 
                 let label = labels[i];
