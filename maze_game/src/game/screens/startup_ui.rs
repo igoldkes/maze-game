@@ -414,7 +414,6 @@ pub fn draw_startup_overlay(
             );
         }
         StartupState::Settings => {
-            println!("{}", preferred_h);
             draw_text(
                 "Settings",
                 x + 20.0,
