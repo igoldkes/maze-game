@@ -65,7 +65,7 @@ pub fn draw_startup_overlay(
         | StartupState::AskContinueFromLog
         | StartupState::NicknameMustChangeNotice
         | StartupState::ContinueNoRecordNotice => 300.0,
-        StartupState::Settings => 300.0,
+        StartupState::Settings => 340.0,
         _ => 220.0,
     };
     let pw = 760.0 * scale;
@@ -421,14 +421,15 @@ pub fn draw_startup_overlay(
                 palette.text_primary,
             );
             let row0_y = y + 92.0 * scale;
-            let labels: [&str; 5] = [
+            let labels: [&str; 6] = [
                     "Menu Music",
                     "Maze Music",
                     "Footsteps",
                     "Wind and Rain",
                     "Menu Clicks",
+                    "Back",
             ];
-            for i in 0..5 {
+            for i in 0..6 {
                 let ry = row0_y + i as f32 * row_h;
                 if menu_role == i {
                     draw_rectangle(
@@ -439,14 +440,26 @@ pub fn draw_startup_overlay(
                         Color::from_rgba(88, 94, 118, 235),
                     );
                 }
-                let label = labels[i];
-                draw_text(
-                    label,
-                    x + row_pad_x + 10.0 * scale,
-                    ry + 8.0 * scale,
-                    ty.body,
-                    palette.text_primary,
-                );
+                if i != 5 {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                }
+                    
             }
             
             let row0_y_opt = y + 92.0 * scale;

@@ -2102,7 +2102,7 @@ impl GameState {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.startup_menu_role = 4;
+                        self.startup_menu_role = 5;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
@@ -2111,7 +2111,7 @@ impl GameState {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.startup_menu_role == 4 {
+                    if self.startup_menu_role == 5 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
@@ -2120,7 +2120,7 @@ impl GameState {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.startup_menu_role = (self.startup_menu_role + 1).min(4);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(5);
                     }
                 }
                 if is_key_pressed(KeyCode::Escape) {
@@ -2156,6 +2156,10 @@ impl GameState {
                         4 => {
                             // Toggle menu clicks on/off
                             self.menu_clicks_settings_toggle = !self.menu_clicks_settings_toggle;
+                        }
+                        5 => {
+                            // Back
+                            self.request_startup_back(StartupPendingBack::ToAskPlayerRoleFromSettings);
                         }
                         _ => {}
                     }
