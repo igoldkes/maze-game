@@ -429,7 +429,7 @@ pub fn draw_startup_overlay(
                     "Footsteps",
                     "Wind and Rain",
                     "Menu Clicks",
-                ];
+            ];
             for i in 0..5 {
                 let ry = row0_y + i as f32 * row_h;
                 if menu_role == i {
@@ -466,7 +466,7 @@ pub fn draw_startup_overlay(
 
                 if label == "On" {
                     draw_rectangle(
-                        x + row_pad_x + 150.0,
+                        x + row_pad_x + 150.0 * scale,
                         ry - 11.0 * scale,
                         40.0 * scale,
                         row_h - 8.0,
@@ -482,7 +482,7 @@ pub fn draw_startup_overlay(
                     );
                 } else {
                     draw_rectangle(
-                        x + row_pad_x + 150.0,
+                        x + row_pad_x + 150.0 * scale,
                         ry - 11.0 * scale,
                         40.0 * scale,
                         row_h - 8.0,
