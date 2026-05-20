@@ -9,6 +9,7 @@ use super::super::ui::theme::{TypeScale, UiPreferences};
 use super::super::StartupState;
 use macroquad::prelude::*;
 
+
 #[allow(clippy::too_many_arguments)]
 pub fn draw_startup_overlay(
     startup: &StartupState,

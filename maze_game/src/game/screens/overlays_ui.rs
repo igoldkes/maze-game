@@ -1,7 +1,12 @@
 //! In-game modal overlays: win celebration, quit confirmations, and F1 password prompt.
 
+use super::super::ui::components::{draw_modal_chrome, draw_wrapped_text, ModalChromeProps};
+use super::super::ui::layout::{centered_clamped_rect, safe_margins, scaled_type, ui_scale};
+use super::super::ui::theme::{TypeScale, UiPreferences};
 use super::super::ui::{draw_panel, PanelStyle};
 use macroquad::prelude::*;
+
+use super::super::PauseMenuState;
 
 /// `selected` is 0..=2: play again, restart level, main menu.
 pub fn draw_end_menu_overlay(
@@ -166,35 +171,225 @@ pub fn draw_normal_f1_password_overlay(normal_f1_password_buffer: &str, normal_f
     );
 }
 
-pub fn draw_quit_confirm_overlay() {
+pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
+    match menu_state {
+        PauseMenuState::Menu { pause_menu_role } => {
+            let prefs = UiPreferences::default();
+            let palette = prefs.palette();
+            let scale = ui_scale();
+            let margin = safe_margins(scale);
+            let ty = scaled_type(&TypeScale::default(), scale);
+
+            let w = screen_width();
+            let h = screen_height();
+            draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
+            let pw = 640.0 * scale; // 640.0
+            let ph = 285.0 * scale; // 150.0
+
+            let rect = centered_clamped_rect(pw, ph, margin);
+            let x = rect.x;
+            let y = rect.y;
+
+            let row0_y = y + 92.0 * scale;
+            let row_h = 38.0 * scale;
+            let row_pad_x = 18.0 * scale;
+            let row_bg_w = rect.w - row_pad_x * 2.0;
+
+            draw_panel(
+                Rect::new(x, y, pw, ph),
+                PanelStyle {
+                    bg: Color::from_rgba(12, 14, 28, 245),
+                    border: Some((2.0, Color::from_rgba(130, 150, 220, 255))),
+                },
+            );
+            draw_text(
+                "Game Paused",
+                x + 20.0,
+                y + 40.0,
+                40.0,
+                Color::from_rgba(220, 225, 245, 255),
+            );
+
+            let labels: [&str; 4] = [
+                "Resume Game",
+                "Settings",
+                "Return to Main Menu",
+                "Exit to Desktop",
+            ];
+
+            for i in 0..4 {
+                let ry = row0_y + (1.25 * (i as f32)) * row_h;
+                if pause_menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                draw_text(
+                    label,
+                    x + row_pad_x + 10.0 * scale,
+                    ry + 8.0 * scale,
+                    ty.body + 4.0,
+                    palette.text_primary,
+                );
+            }
+        }
+        PauseMenuState::Settings { pause_settings_menu_role, menu_music_settings_toggle, maze_music_settings_toggle, footstep_settings_toggle, wind_rain_settings_toggle, menu_clicks_settings_toggle } => {
+            let prefs = UiPreferences::default();
+            let palette = prefs.palette();
+            let scale = ui_scale();
+            let margin = safe_margins(scale);
+            let ty = scaled_type(&TypeScale::default(), scale);
+
+            let w = screen_width();
+            let h = screen_height();
+            draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
+            let pw = 760.0 * scale;
+            let ph = 300.0 * scale;
+
+            let rect = centered_clamped_rect(pw, ph, margin);
+            let x = rect.x;
+            let y = rect.y;
+
+            let row0_y = y + 92.0 * scale;
+            let row_h = 38.0 * scale;
+            let row_pad_x = 18.0 * scale;
+            let row_bg_w = rect.w - row_pad_x * 2.0;
+
+            let semantic_id = "in_game_settings";
+
+            draw_modal_chrome(&ModalChromeProps {
+                rect,
+                title: None,
+                palette,
+                focused: true,
+                semantic_id,
+            });
+
+            draw_text(
+                "Settings",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+
+            let labels: [&str; 5] = [
+                    "Menu Music",
+                    "Maze Music",
+                    "Footsteps",
+                    "Wind and Rain",
+                    "Menu Clicks",
+            ];
+            for i in 0..5 {
+                let ry = row0_y + i as f32 * row_h;
+                if pause_settings_menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                draw_text(
+                    label,
+                    x + row_pad_x + 10.0 * scale,
+                    ry + 8.0 * scale,
+                    ty.body,
+                    palette.text_primary,
+                );
+            }
+
+            let row0_y_opt = y + 92.0 * scale;
+            let labels: [&str; 5] = [
+                    if menu_music_settings_toggle { "On" } else { "Off" },
+                    if maze_music_settings_toggle { "On" } else { "Off" },
+                    if footstep_settings_toggle { "On" } else { "Off" },
+                    if wind_rain_settings_toggle { "On" } else { "Off" },
+                    if menu_clicks_settings_toggle { "On" } else { "Off" },
+            ];
+            for i in 0..5 {
+                let ry = row0_y_opt + i as f32 * row_h;
+                
+                let label = labels[i];
+
+                if label == "On" {
+                    draw_rectangle(
+                        x + row_pad_x + 150.0 * scale,
+                        ry - 11.0 * scale,
+                        40.0 * scale,
+                        row_h - 8.0,
+                        Color::from_rgba(88, 94, 150, 235),
+                    );
+                    draw_text(
+                        label,
+                        x + row_pad_x + 160.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                        //Color::from_rgba(10, 163, 13, 1),
+                    );
+                } else {
+                    draw_rectangle(
+                        x + row_pad_x + 150.0 * scale,
+                        ry - 11.0 * scale,
+                        40.0 * scale,
+                        row_h - 8.0,
+                        Color::from_rgba(88, 94, 150, 235),
+                    );
+                    draw_text(
+                        label,
+                        x + row_pad_x + 157.5 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                        //Color::from_rgba(163, 10, 10, 1),
+                    );
+                }
+            }
+        }
+        PauseMenuState::None => {}
+    }
+    
+}
+
+pub fn draw_in_game_settings_overlay( pause_settings_menu_role: usize ) {
+    let prefs = UiPreferences::default();
+    let palette = prefs.palette();
+    let scale = ui_scale();
+    let margin = safe_margins(scale);
+    let ty = scaled_type(&TypeScale::default(), scale);
+
     let w = screen_width();
     let h = screen_height();
     draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
-    let pw = 640.0;
-    let ph = 150.0;
-    let x = (w - pw) * 0.5;
-    let y = (h - ph) * 0.5;
-    draw_panel(
-        Rect::new(x, y, pw, ph),
-        PanelStyle {
-            bg: Color::from_rgba(12, 14, 28, 245),
-            border: Some((2.0, Color::from_rgba(130, 150, 220, 255))),
-        },
-    );
-    draw_text(
-        "Return to main menu?",
-        x + 20.0,
-        y + 36.0,
-        28.0,
-        Color::from_rgba(220, 225, 245, 255),
-    );
-    draw_text(
-        "Y or Enter = Yes   ·   N or Esc = No   ·   R = Replay",
-        x + 20.0,
-        y + 88.0,
-        22.0,
-        Color::from_rgba(160, 200, 255, 255),
-    );
+    let pw = 640.0 * scale; // 640.0
+    let ph = 285.0 * scale; // 150.0
+
+    let rect = centered_clamped_rect(pw, ph, margin);
+    let x = rect.x;
+    let y = rect.y;
+
+    let row0_y = y + 92.0 * scale;
+    let row_h = 38.0 * scale;
+    let row_pad_x = 18.0 * scale;
+    let row_bg_w = rect.w - row_pad_x * 2.0;
+
+    let semantic_id = "in_game_settings";
+
+    draw_modal_chrome(&ModalChromeProps {
+        rect,
+        title: None,
+        palette,
+        focused: true,
+        semantic_id,
+    });
 }
 
 pub fn draw_unsaved_quit_confirm_overlay() {
@@ -213,7 +408,7 @@ pub fn draw_unsaved_quit_confirm_overlay() {
         },
     );
     draw_text(
-        "Go back to main lobby now?",
+        "Go back to main menu now?",
         x + 20.0,
         y + 42.0,
         30.0,
@@ -234,7 +429,7 @@ pub fn draw_unsaved_quit_confirm_overlay() {
         Color::from_rgba(255, 180, 160, 255),
     );
     draw_text(
-        "Y / Enter = leave anyway    ·    N / Esc = keep playing   ·   R = Replay",
+        "Y / Enter = leave anyway    ·    N / Esc = keep playing",
         x + 20.0,
         y + 155.0,
         22.0,

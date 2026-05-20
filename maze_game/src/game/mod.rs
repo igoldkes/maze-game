@@ -32,7 +32,7 @@ use render::{draw_maze_floors, draw_maze_walls, FloorDraw};
 use screens::credits_ui::draw_credits_overlay;
 use screens::overlays_ui::{
     draw_end_menu_overlay, draw_normal_f1_password_overlay, draw_quit_confirm_overlay,
-    draw_unsaved_quit_confirm_overlay,
+    draw_unsaved_quit_confirm_overlay, draw_in_game_settings_overlay,
 };
 use screens::startup_ui::draw_startup_overlay;
 use story::{
@@ -95,6 +95,20 @@ enum StartupState {
     Done,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum PauseMenuState {
+    None,
+    Menu { pause_menu_role: usize },
+    Settings {
+        pause_settings_menu_role: usize,
+        menu_music_settings_toggle: bool,
+        maze_music_settings_toggle: bool,
+        footstep_settings_toggle: bool,
+        wind_rain_settings_toggle: bool,
+        menu_clicks_settings_toggle: bool,
+    },
+}
+
 #[derive(Clone, Debug)]
 enum RunContext {
     Normal,
@@ -125,6 +139,7 @@ pub struct GameState {
     story: StoryPhase,
     end_menu: EndMenuState,
     startup: StartupState,
+    menu_state: PauseMenuState,
     password_buffer: String,
     show_credits: bool,
     easy_test_map: bool,
@@ -156,12 +171,14 @@ pub struct GameState {
     menu_clicks_settings_toggle: bool,
     is_map_open: bool,
     map_sound_played: bool,
+    paused: bool,
     old_buffer_len: usize,
     progress: ProgressService,
     /// True: show “return to main menu?” (Y/N) after Esc.
     quit_confirm: bool,
     /// Second confirmation for unfinished normal-mode stages.
     quit_unsaved_confirm: bool,
+    quit_unsaved_confirm_check: bool,
     /// When the player is first in `Playing` for this maze, we start this clock for `elapsed_secs` on save.
     play_timer_start: Option<Instant>,
     /// `"prim"` or `"dfs"` for the maze currently loaded (written on progress save for replay tooling).
@@ -179,6 +196,10 @@ pub struct GameState {
     startup_menu_role: usize,
     /// Arrow-menu highlight: new vs continue.
     startup_menu_run_type: usize,
+    /// Arrow-menu highlight: pause menu todo!()
+    pause_menu_role: usize,
+    /// Arrow-menu highlight: pause menu settings todo!()
+    pause_settings_menu_role: usize,
     /// Arrow-menu highlight on continue-from-log Y/N.
     startup_menu_continue: usize,
     startup_back_confirm: bool,
@@ -234,6 +255,7 @@ impl GameState {
             story: StoryPhase::new_run(),
             end_menu: EndMenuState::Hidden,
             startup: StartupState::Splash,
+            menu_state: PauseMenuState::None,
             password_buffer: String::new(),
             show_credits: false,
             easy_test_map: false,
@@ -265,10 +287,12 @@ impl GameState {
             menu_clicks_settings_toggle: true,
             is_map_open: false,
             map_sound_played: false,
+            paused: false,
             old_buffer_len: 0,
             progress: ProgressService::new_default(),
             quit_confirm: false,
             quit_unsaved_confirm: false,
+            quit_unsaved_confirm_check: false,
             play_timer_start: None,
             maze_generator: "prim".to_string(),
             startup_records_scroll: 0,
@@ -278,6 +302,8 @@ impl GameState {
             startup_continue_max_cleared: None,
             startup_menu_role: 0,
             startup_menu_run_type: 0,
+            pause_menu_role: 0,
+            pause_settings_menu_role: 0,
             startup_menu_continue: 0,
             startup_back_confirm: false,
             startup_pending_back: None,
@@ -454,39 +480,47 @@ impl GameState {
                     play_sound_once(&self.click_sound);
                 }
                 self.quit_unsaved_confirm = false;
-                self.quit_confirm = false;
-            } else if is_key_pressed(KeyCode::R) {
-                if self.menu_clicks_settings_toggle {
-                    play_sound_once(&self.click_sound);
-                }
-                self.restart_level();
-            }
+            } //else if is_key_pressed(KeyCode::R) {
+            //    if self.menu_clicks_settings_toggle {
+            //        play_sound_once(&self.click_sound);
+            //    }
+            //    self.restart_level();
+            //}
             return;
         }
 
         if self.quit_confirm {
-            if is_key_pressed(KeyCode::Y) || is_key_pressed(KeyCode::Enter) {
-                if self.menu_clicks_settings_toggle {
-                    play_sound_once(&self.click_sound);
-                }
-                if self.should_warn_unsaved_quit() {
-                    self.quit_unsaved_confirm = true;
-                } else {
-                    self.return_to_main_lobby();
-                }
-            } else if is_key_pressed(KeyCode::N) || is_key_pressed(KeyCode::Escape) {
-                if self.menu_clicks_settings_toggle {
-                    play_sound_once(&self.click_sound);
-                }
-                self.quit_confirm = false;
-            } else if is_key_pressed(KeyCode::R) {
-                if self.menu_clicks_settings_toggle {
-                    play_sound_once(&self.click_sound);
-                }
-                self.restart_level();
-            }
-            return;
+            self.player.paused = true;
+            self.paused = true;
+        } else {
+            self.pause_menu_role = 0;
+            self.paused = false;
+            self.player.paused = false;
         }
+
+        //if self.quit_confirm {
+        //    if is_key_pressed(KeyCode::Y) || is_key_pressed(KeyCode::Enter) {
+        //        if self.menu_clicks_settings_toggle {
+        //            play_sound_once(&self.click_sound);
+        //        }
+        //        if self.should_warn_unsaved_quit() {
+        //            self.quit_unsaved_confirm = true;
+        //        } else {
+        //            self.return_to_main_lobby();
+        //        }
+        //    } else if is_key_pressed(KeyCode::N) || is_key_pressed(KeyCode::Escape) {
+        //        if self.menu_clicks_settings_toggle {
+        //            play_sound_once(&self.click_sound);
+        //        }
+        //        self.quit_confirm = false;
+        //    } else if is_key_pressed(KeyCode::R) {
+        //        if self.menu_clicks_settings_toggle {
+        //            play_sound_once(&self.click_sound);
+        //        }
+        //        self.restart_level();
+        //    }
+        //    return;
+        //}
 
         // Keep win overlay/input state tied to the Won phase only (avoids stray menu keys mid-intro).
         if !matches!(self.story, StoryPhase::Won) {
@@ -573,7 +607,7 @@ impl GameState {
             }
         }
 
-        if let Some(name) = self.story.update(dt) {
+        if let Some(name) = self.story.update(dt, self.paused) {
             self.player_name = name;
         }
         if self.easy_test_map && !matches!(self.story, StoryPhase::Playing | StoryPhase::Won) {
@@ -632,7 +666,7 @@ impl GameState {
         self.story = StoryPhase::Restart;
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&mut self) {
         if self.startup != StartupState::Done {
             draw_startup_overlay(
                 &self.startup,
@@ -817,9 +851,155 @@ impl GameState {
         if self.easy_test_map {
             self.draw_test_mode_shortcuts();
         }
+
         if self.quit_confirm {
-            draw_quit_confirm_overlay();
+            //handle menu changes with up/down w/s BLAH
+
+            if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::Settings { .. } ) {
+                if self.menu_clicks_settings_toggle {
+                    play_sound_once(&self.click_sound);
+                }
+                self.menu_state = PauseMenuState::Menu { pause_menu_role: self.pause_menu_role };
+            } else if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::Menu { .. } ) && !self.quit_unsaved_confirm_check {
+                if self.menu_clicks_settings_toggle {
+                    play_sound_once(&self.click_sound);
+                }
+                self.menu_state = PauseMenuState::None;
+                self.quit_confirm = false;
+            } else if matches!(self.menu_state, PauseMenuState::None) {
+                self.menu_state = PauseMenuState::Menu { pause_menu_role: self.pause_menu_role };
+            }
+
+            if matches!(self.menu_state, PauseMenuState::Menu { .. }) {
+                self.menu_state = PauseMenuState::Menu { pause_menu_role: self.pause_menu_role };
+                self.pause_settings_menu_role = 0;
+            } else if matches!(self.menu_state, PauseMenuState::Settings { .. } ) {
+                self.menu_state = PauseMenuState::Settings {
+                    pause_settings_menu_role: self.pause_settings_menu_role,
+                    menu_music_settings_toggle: self.menu_music_settings_toggle,
+                    maze_music_settings_toggle: self.maze_music_settings_toggle,
+                    footstep_settings_toggle: self.footstep_settings_toggle,
+                    wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                    menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                };
+            }
+
+            if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
+                if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
+                    if self.pause_menu_role == 0 {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_menu_role = 3;
+                    } else {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_menu_role = self.pause_menu_role.saturating_sub(1);
+                    }
+                } else {
+                    if self.pause_settings_menu_role == 0 {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_settings_menu_role = 4;
+                    } else {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
+                    }
+                }
+                
+            }
+            if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
+                if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
+                    if self.pause_menu_role == 3 {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_menu_role = 0;
+                    } else {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_menu_role = (self.pause_menu_role + 1).min(3);
+                    }
+                } else {
+                    if self.pause_settings_menu_role == 4 {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_settings_menu_role = 0;
+                    } else {
+                        if self.menu_clicks_settings_toggle {
+                            play_sound_once(&self.click_sound);
+                        }
+                        self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(4);
+                    }
+                }
+            }
+
+            draw_quit_confirm_overlay(self.menu_state.clone());
+
+            if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::Menu { .. }) {
+                match self.pause_menu_role {
+                    0 => {
+                        // Resume
+                        self.quit_confirm = false;
+                        self.menu_state = PauseMenuState::None;
+                    }
+                    1 => {
+                        // Settings
+                        self.menu_state = PauseMenuState::Settings {
+                            pause_settings_menu_role: self.pause_settings_menu_role,
+                            menu_music_settings_toggle: self.menu_music_settings_toggle,
+                            maze_music_settings_toggle: self.maze_music_settings_toggle,
+                            footstep_settings_toggle: self.footstep_settings_toggle,
+                            wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                            menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                        };
+                    }
+                    2 => {
+                        // Main Menu
+                        if self.should_warn_unsaved_quit() {
+                            self.quit_unsaved_confirm = true;
+                        } else {
+                            self.return_to_main_lobby();
+                            self.menu_state = PauseMenuState::None;
+                        }
+                    }
+                    3 => {
+                        // Exit
+                        std::process::exit(0);
+                    }
+                    _ => {}
+                }
+            } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::Settings { .. }) {
+                match self.pause_settings_menu_role {
+                    0 => {
+                        self.menu_music_settings_toggle = !self.menu_music_settings_toggle;
+                    }
+                    1 => {
+                        self.maze_music_settings_toggle = !self.maze_music_settings_toggle;
+                    }
+                    2 => {
+                        self.footstep_settings_toggle = !self.footstep_settings_toggle;
+                        self.player.footstep_settings_toggle = self.footstep_settings_toggle;
+                    }
+                    3 => {
+                        self.wind_rain_settings_toggle = !self.wind_rain_settings_toggle;
+                    }
+                    4 => {
+                        self.menu_clicks_settings_toggle = !self.menu_clicks_settings_toggle;
+                    }
+                    _ => {}
+                }
+            }
         }
+
+        self.quit_unsaved_confirm_check = self.quit_unsaved_confirm;
+
         if self.quit_unsaved_confirm {
             draw_unsaved_quit_confirm_overlay();
         }

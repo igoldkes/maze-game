@@ -23,6 +23,7 @@ pub enum StoryPhase {
     AskNameOnMap {
         buffer: String,
         backspace_cool: f32,
+        //paused: bool,
     },
     ControlsPrompt,
     Playing,
@@ -35,7 +36,7 @@ impl StoryPhase {
         StoryPhase::IntroThought
     }
 
-    pub fn update(&mut self, dt: f32) -> Option<String> {
+    pub fn update(&mut self, dt: f32, paused: bool) -> Option<String> {
         match self {
             StoryPhase::IntroThought => {
                 if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) {
@@ -50,7 +51,9 @@ impl StoryPhase {
                 None
             }
             StoryPhase::MapReveal { elapsed, is_first_stage } => {
-                *elapsed += dt;
+                if !paused {
+                    *elapsed += dt;
+                }
                 if *elapsed >= OPENING_MAP_SECS {
                     NAME_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
                     if *is_first_stage {
@@ -80,23 +83,26 @@ impl StoryPhase {
                     return None;
                 }
 
-                while let Some(ch) = get_char_pressed() {
-                    // Some platforms deliver Backspace/Delete via character events; KeyCode::Backspace
-                    // alone would miss those.
-                    if ch == '\u{8}' || ch == '\u{7f}' {
-                        if !buffer.is_empty() {
-                            buffer.pop();
-                            *backspace_cool = 0.12;
+                if !paused {
+                    while let Some(ch) = get_char_pressed() {
+                        // Some platforms deliver Backspace/Delete via character events; KeyCode::Backspace
+                        // alone would miss those.
+                        if ch == '\u{8}' || ch == '\u{7f}' {
+                            if !buffer.is_empty() {
+                                buffer.pop();
+                                *backspace_cool = 0.12;
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    if ch.is_control() {
-                        continue;
-                    }
-                    if ch.is_ascii_alphanumeric() && buffer.len() < NAME_MAX_LEN {
-                        buffer.push(ch);
+                        if ch.is_control() {
+                            continue;
+                        }
+                        if ch.is_ascii_alphanumeric() && buffer.len() < NAME_MAX_LEN {
+                            buffer.push(ch);
+                        }
                     }
                 }
+                    
 
                 if is_key_pressed(KeyCode::Enter) {
                     let name = buffer.trim().to_string();

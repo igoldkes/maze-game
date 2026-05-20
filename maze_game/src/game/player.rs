@@ -23,6 +23,7 @@ pub struct Player {
     pub footstep_settings_toggle: bool,
     pub stage: usize,
     blocked: bool,
+    pub paused: bool,
 }
 
 impl Player {
@@ -51,6 +52,7 @@ impl Player {
             footstep_settings_toggle: true,
             stage,
             blocked: false,
+            paused: false,
         }
     }
 
@@ -63,10 +65,13 @@ impl Player {
     }
 
     pub fn update(&mut self, maze: &Maze, origin: Vec2, cell_size: f32, dt: f32) {
-        // Acquire a new target only when fully centered in a cell.
-        if self.cell == self.target_cell {
-            if let Some(next) = self.next_cell_from_input(maze) {
-                self.target_cell = next;
+        if !self.paused {
+            // Only allow movement if not in pause menu
+            if self.cell == self.target_cell {
+                // Acquire a new target only when fully centered in a cell
+                if let Some(next) = self.next_cell_from_input(maze) {
+                    self.target_cell = next;
+                }
             }
         }
 
