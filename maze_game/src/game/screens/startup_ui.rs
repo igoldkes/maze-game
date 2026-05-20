@@ -56,9 +56,9 @@ pub fn draw_startup_overlay(
         StartupState::AskNewOrContinue => 280.0,
         StartupState::AskPlayerRole => {
             if progress.has_saved_records() {
-                300.0
+                340.0
             } else {
-                260.0
+                300.0
             }
         }
         StartupState::AskPlayerName
@@ -66,6 +66,7 @@ pub fn draw_startup_overlay(
         | StartupState::NicknameMustChangeNotice
         | StartupState::ContinueNoRecordNotice => 300.0,
         StartupState::Settings => 340.0,
+        StartupState::Shop => 300.0,
         _ => 220.0,
     };
     let pw = 760.0 * scale;
@@ -85,6 +86,11 @@ pub fn draw_startup_overlay(
         StartupState::AskDevPassword => "startup-dev-password",
         StartupState::ViewRecords | StartupState::Done => "startup-unused",
         StartupState::Settings => "startup-settings",
+        StartupState::Shop => "startup-shop",
+        StartupState::PlayerSkins => "shop-playerskins",
+        StartupState::MazeThemes => "shop-mazethemes",
+        StartupState::MenuThemes => "shop-menuthemes",
+        StartupState::MusicThemes => "shop-musicthemes",
     };
     draw_modal_chrome(&ModalChromeProps {
         rect,
@@ -131,11 +137,12 @@ pub fn draw_startup_overlay(
                 palette.text_primary,
             );
             let row0_y = y + 92.0 * scale;
-            let n = if progress.has_saved_records() { 4 } else { 3 };
+            let n = if progress.has_saved_records() { 5 } else { 4 };
 
-            if n == 4 {
-                let labels: [&str; 4] = [
+            if n == 5 {
+                let labels: [&str; 5] = [
                     "Player Mode",
+                    "Shop (coming soon)",
                     "Previous Records (cleared mazes on this computer)",
                     "Settings",
                     "Exit Game",
@@ -152,17 +159,29 @@ pub fn draw_startup_overlay(
                         );
                     }
                     let label = labels[i];
-                    draw_text(
-                        label,
-                        x + row_pad_x + 10.0 * scale,
-                        ry + 8.0 * scale,
-                        ty.body,
-                        palette.text_primary,
-                    );
+                    if i != n-1 {
+                        draw_text(
+                            label,
+                            x + row_pad_x + 10.0 * scale,
+                            ry + 8.0 * scale,
+                            ty.body,
+                            palette.text_primary,
+                        );
+                    } else {
+                        draw_text(
+                            label,
+                            x + row_pad_x + 10.0 * scale,
+                            ry + 8.0 * scale,
+                            ty.body,
+                            Color::from_rgba(255, 180, 160, 255),
+                        )
+                    }
+                        
                 }
             } else {
-                    let labels: [&str; 3] = [
+                    let labels: [&str; 4] = [
                     "Player Mode",
+                    "Shop",
                     "Settings",
                     "Exit Game",
                 ];
@@ -178,13 +197,23 @@ pub fn draw_startup_overlay(
                         );
                     }
                     let label = labels[i];
-                    draw_text(
-                        label,
-                        x + row_pad_x + 10.0 * scale,
-                        ry + 8.0 * scale,
-                        ty.body,
-                        palette.text_primary,
-                    );
+                    if i != n-1 {
+                        draw_text(
+                            label,
+                            x + row_pad_x + 10.0 * scale,
+                            ry + 8.0 * scale,
+                            ty.body,
+                            palette.text_primary,
+                        );
+                    } else {
+                        draw_text(
+                            label,
+                            x + row_pad_x + 10.0 * scale,
+                            ry + 8.0 * scale,
+                            ty.body,
+                            Color::from_rgba(255, 180, 160, 255),
+                        )
+                    }
                 }
             }
             
@@ -208,8 +237,9 @@ pub fn draw_startup_overlay(
             let labels = [
                 "New game (fresh intro story)",
                 "Continue (ask nickname and resume)",
+                "Back",
             ];
-            for i in 0..2 {
+            for i in 0..3 {
                 let ry = row0_y + i as f32 * row_h;
                 if menu_run_type == i {
                     draw_rectangle(
@@ -220,21 +250,31 @@ pub fn draw_startup_overlay(
                         Color::from_rgba(88, 94, 118, 235),
                     );
                 }
-                draw_text(
-                    labels[i],
-                    x + row_pad_x + 10.0 * scale,
-                    ry + 8.0 * scale,
-                    ty.body,
-                    palette.text_primary,
-                );
+                if i != 2 {
+                    draw_text(
+                        labels[i],
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        labels[i],
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
             }
-            draw_text(
-                "↑ ↓ select · Enter confirm · Esc back",
-                x + 20.0,
-                row0_y + 2.0 * row_h + 14.0 * scale,
-                ty.body_min,
-                palette.text_muted,
-            );
+            //draw_text(
+            //    "↑ ↓ select · Enter confirm · Esc back",
+            //    x + 20.0,
+            //    row0_y + 2.0 * row_h + 14.0 * scale,
+            //    ty.body_min,
+            //    palette.text_muted,
+            //);
         }
         StartupState::AskPlayerName => {
             draw_text(
@@ -456,7 +496,7 @@ pub fn draw_startup_overlay(
                         x + row_pad_x + 10.0 * scale,
                         ry + 8.0 * scale,
                         ty.body,
-                        palette.text_primary,
+                        Color::from_rgba(255, 180, 160, 255),
                     );
                 }
                     
@@ -510,6 +550,89 @@ pub fn draw_startup_overlay(
                 }
             }
         }
+        StartupState::Shop => {
+            draw_text(
+                "Shop",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 5] = [
+                    "Player Skins",
+                    "Maze Themes",
+                    "Menu Themes",
+                    "Music Themes",
+                    "Back",
+            ];
+            for i in 0..5 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 4 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+            }
+        }
+        StartupState::PlayerSkins => {
+            draw_text(
+                "Player Skins",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+        }
+        StartupState::MazeThemes => {
+            draw_text(
+                "Maze Themes",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+        }
+        StartupState::MenuThemes => {
+            draw_text(
+                "Menu Themes",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+        }
+        StartupState::MusicThemes => {
+            draw_text(
+                "Music Themes",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+        }
         StartupState::ViewRecords | StartupState::Done => {}
         
     }
@@ -538,7 +661,7 @@ fn draw_startup_back_confirm_layer() {
         Color::from_rgba(220, 225, 245, 255),
     );
     draw_text(
-        "You will leave this step.",
+        "You will leave this screen.",
         px + 24.0,
         py + 72.0,
         18.0,

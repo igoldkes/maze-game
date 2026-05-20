@@ -229,13 +229,23 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                     );
                 }
                 let label = labels[i];
-                draw_text(
-                    label,
-                    x + row_pad_x + 10.0 * scale,
-                    ry + 8.0 * scale,
-                    ty.body + 4.0,
-                    palette.text_primary,
-                );
+                if i != 3 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body + 4.0,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body + 4.0,
+                        Color::from_rgba(255, 180, 160, 255),
+                    )
+                }
             }
         }
         PauseMenuState::Settings { pause_settings_menu_role, menu_music_settings_toggle, maze_music_settings_toggle, footstep_settings_toggle, wind_rain_settings_toggle, menu_clicks_settings_toggle } => {
@@ -249,7 +259,7 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
             let h = screen_height();
             draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
             let pw = 760.0 * scale;
-            let ph = 300.0 * scale;
+            let ph = 340.0 * scale;
 
             let rect = centered_clamped_rect(pw, ph, margin);
             let x = rect.x;
@@ -278,14 +288,15 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                 palette.text_primary,
             );
 
-            let labels: [&str; 5] = [
+            let labels: [&str; 6] = [
                     "Menu Music",
                     "Maze Music",
                     "Footsteps",
                     "Wind and Rain",
                     "Menu Clicks",
+                    "Back",
             ];
-            for i in 0..5 {
+            for i in 0..6 {
                 let ry = row0_y + i as f32 * row_h;
                 if pause_settings_menu_role == i {
                     draw_rectangle(
@@ -297,13 +308,23 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                     );
                 }
                 let label = labels[i];
-                draw_text(
-                    label,
-                    x + row_pad_x + 10.0 * scale,
-                    ry + 8.0 * scale,
-                    ty.body,
-                    palette.text_primary,
-                );
+                if i != 5 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    )
+                }
             }
 
             let row0_y_opt = y + 92.0 * scale;
