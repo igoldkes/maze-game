@@ -1,0 +1,15 @@
+(from inside maze_game)
+
+windows:
+
+    $ cargo build --release --target x86_64-pc-windows-msvc
+
+    ...
+
+    $ cp target/x86_64-pc-windows-msvc/release/maze_game.exe ./
+    tar -c -a -f maze-game-win.zip maze_game.exe assets/*
+
+
+mac:
+
+    $ 
