@@ -2380,7 +2380,49 @@ impl GameState {
 
                 ///////////////////////////////////////////////////////////////////
 
+                let recs = self.progress.load_summaries_newest_first(50);
+                const PAGE: usize = 10;
+                if recs.is_empty() {
+                    self.startup_records_selected = 0;
+                    self.startup_records_scroll = 0;
+                } else {
+                    let max_selected = recs.len() - 1;
+                    self.startup_records_selected = self.startup_records_selected.min(max_selected);
+                }
                 
+                if (is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W)) && self.startup_records_selected > 0 {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    self.startup_records_selected -= 1;
+                }
+                if (is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S)) && self.startup_records_selected + 1 < recs.len() {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    self.startup_records_selected += 1;
+                }
+                let max_scroll = recs.len().saturating_sub(PAGE);
+                if self.startup_records_selected < self.startup_records_scroll {
+                    self.startup_records_scroll = self.startup_records_selected;
+                } else if self.startup_records_selected >= self.startup_records_scroll + PAGE {
+                    self.startup_records_scroll = self.startup_records_selected + 1 - PAGE;
+                }
+                self.startup_records_scroll = self.startup_records_scroll.min(max_scroll);
+
+                if is_key_pressed(KeyCode::Enter) && !recs.is_empty() {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    if let Some(record) = self
+                        .progress
+                        .load_full_record_by_newest_index(self.startup_records_selected)
+                    {
+                        if self.start_replay_from_record(record) {
+                            self.startup = StartupState::Done;
+                        }
+                    }
+                }
 
 
             }
