@@ -1628,6 +1628,7 @@ impl GameState {
         self.easy_test_map = false;
         self.test_mask_enabled = true;
         self.stage = record.stage as usize;
+        self.player.stage = self.stage;
         self.cols = record.maze_w;
         self.rows = record.maze_h;
         self.start_cell = (record.start_x, record.start_y);
