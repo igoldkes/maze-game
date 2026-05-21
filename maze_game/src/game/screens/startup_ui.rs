@@ -142,7 +142,7 @@ pub fn draw_startup_overlay(
             if n == 5 {
                 let labels: [&str; 5] = [
                     "Player Mode",
-                    "Shop (coming soon)",
+                    "Shop",
                     "Previous Records (cleared mazes on this computer)",
                     "Settings",
                     "Exit Game",
@@ -179,7 +179,7 @@ pub fn draw_startup_overlay(
                         
                 }
             } else {
-                    let labels: [&str; 4] = [
+                let labels: [&str; 4] = [
                     "Player Mode",
                     "Shop",
                     "Settings",

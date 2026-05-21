@@ -898,58 +898,60 @@ impl GameState {
                 };
             }
 
-            if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
-                if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
-                    if self.pause_menu_role == 0 {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
+            if !self.quit_unsaved_confirm {
+                if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
+                    if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
+                        if self.pause_menu_role == 0 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_menu_role = 3;
+                        } else {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_menu_role = self.pause_menu_role.saturating_sub(1);
                         }
-                        self.pause_menu_role = 3;
                     } else {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
+                        if self.pause_settings_menu_role == 0 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_settings_menu_role = 5;
+                        } else {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
-                        self.pause_menu_role = self.pause_menu_role.saturating_sub(1);
                     }
-                } else {
-                    if self.pause_settings_menu_role == 0 {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
-                        }
-                        self.pause_settings_menu_role = 5;
-                    } else {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
-                        }
-                        self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
-                    }
+                    
                 }
-                
-            }
-            if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
-                    if self.pause_menu_role == 3 {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
+                if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
+                    if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
+                        if self.pause_menu_role == 3 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_menu_role = 0;
+                        } else {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_menu_role = (self.pause_menu_role + 1).min(3);
                         }
-                        self.pause_menu_role = 0;
                     } else {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
+                        if self.pause_settings_menu_role == 5 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_settings_menu_role = 0;
+                        } else {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                            }
+                            self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(5);
                         }
-                        self.pause_menu_role = (self.pause_menu_role + 1).min(3);
-                    }
-                } else {
-                    if self.pause_settings_menu_role == 5 {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
-                        }
-                        self.pause_settings_menu_role = 0;
-                    } else {
-                        if self.menu_clicks_settings_toggle {
-                            play_sound_once(&self.click_sound);
-                        }
-                        self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(5);
                     }
                 }
             }
@@ -1847,11 +1849,16 @@ impl GameState {
                             //    self.startup = StartupState::AskDevPassword;
                             //}
                             1 => {
+                                // Shop
+                                self.startup_menu_role = 0;
+                                self.startup = StartupState::Shop;
+                            }
+                            2 => {
                                 // Settings
                                 self.startup_menu_role = 0;
                                 self.startup = StartupState::Settings;
                             }
-                            2 => {
+                            3 => {
                                 // Exit Game
                                 std::process::exit(0);
                             }
