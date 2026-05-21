@@ -1499,7 +1499,8 @@ impl GameState {
         self.story = if show_controls_prompt {
             StoryPhase::new_run()
         } else {
-            StoryPhase::Playing
+            // show maze map
+            StoryPhase::MapReveal { elapsed: 0.0, is_first_stage: false }
         };
         self.startup = StartupState::Done;
         self.startup_player_name_buffer.clear();
