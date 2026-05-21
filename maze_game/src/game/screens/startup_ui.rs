@@ -17,6 +17,8 @@ pub fn draw_startup_overlay(
     password_buffer: &str,
     startup_records_scroll: usize,
     startup_records_selected: usize,
+    shop_items_selected: usize,
+    shop_items_scroll: usize,
     player_name: &str,
     startup_nickname_buffer: &str,
     nickname_input_queue_ready: bool,
@@ -605,6 +607,13 @@ pub fn draw_startup_overlay(
                 ty.headline,
                 palette.text_primary,
             );
+
+            draw_startup_records_panel(progress, shop_items_scroll, shop_items_selected);
+            draw_startup_credits_footer();
+            if back_confirm {
+                draw_startup_back_confirm_layer();
+            }
+            return;
         }
         StartupState::MazeThemes => {
             draw_text(

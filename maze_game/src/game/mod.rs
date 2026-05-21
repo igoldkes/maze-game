@@ -688,6 +688,8 @@ impl GameState {
                 &self.password_buffer,
                 self.startup_records_scroll,
                 self.startup_records_selected,
+                self.shop_items_selected,
+                self.shop_items_scroll,
                 &self.player_name,
                 &self.startup_player_name_buffer,
                 STARTUP_NAME_INPUT_QUEUE_CLEARED.load(Ordering::Relaxed),
@@ -2389,37 +2391,37 @@ impl GameState {
 
                 ///////////////////////////////////////////////////////////////////
 
-                let recs = self.progress.load_summaries_newest_first(50);
-                const PAGE: usize = 10;
-                if recs.is_empty() {
-                    self.startup_records_selected = 0;
-                    self.startup_records_scroll = 0;
+                let items = self.progress.load_summaries_newest_first(50);
+                const PAGE: usize = 5;
+                if items.is_empty() {
+                    self.shop_items_selected = 0;
+                    self.shop_items_scroll = 0;
                 } else {
-                    let max_selected = recs.len() - 1;
-                    self.startup_records_selected = self.startup_records_selected.min(max_selected);
+                    let max_selected = items.len() - 1;
+                    self.shop_items_selected = self.shop_items_selected.min(max_selected);
                 }
                 
-                if (is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W)) && self.startup_records_selected > 0 {
+                if (is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W)) && self.shop_items_selected > 0 {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
-                    self.startup_records_selected -= 1;
+                    self.shop_items_selected -= 1;
                 }
-                if (is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S)) && self.startup_records_selected + 1 < recs.len() {
+                if (is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S)) && self.shop_items_selected + 1 < items.len() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
-                    self.startup_records_selected += 1;
+                    self.shop_items_selected += 1;
                 }
-                let max_scroll = recs.len().saturating_sub(PAGE);
-                if self.startup_records_selected < self.startup_records_scroll {
-                    self.startup_records_scroll = self.startup_records_selected;
-                } else if self.startup_records_selected >= self.startup_records_scroll + PAGE {
-                    self.startup_records_scroll = self.startup_records_selected + 1 - PAGE;
+                let max_scroll = items.len().saturating_sub(PAGE);
+                if self.shop_items_selected < self.shop_items_scroll {
+                    self.shop_items_scroll = self.shop_items_selected;
+                } else if self.shop_items_selected >= self.shop_items_scroll + PAGE {
+                    self.shop_items_scroll = self.shop_items_selected + 1 - PAGE;
                 }
-                self.startup_records_scroll = self.startup_records_scroll.min(max_scroll);
+                self.shop_items_scroll = self.shop_items_scroll.min(max_scroll);
 
-                if is_key_pressed(KeyCode::Enter) && !recs.is_empty() {
+                if is_key_pressed(KeyCode::Enter) && !items.is_empty() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
