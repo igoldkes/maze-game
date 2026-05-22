@@ -24,6 +24,7 @@ pub struct Player {
     pub stage: usize,
     blocked: bool,
     pub paused: bool,
+    pub health: usize,
 }
 
 impl Player {
@@ -53,6 +54,7 @@ impl Player {
             stage,
             blocked: false,
             paused: false,
+            health: 5,
         }
     }
 

@@ -155,6 +155,7 @@ pub struct GameState {
     exit_star: Texture2D,
     hint_icon: Texture2D,
     map_paper: Texture2D,
+    player_heart: Texture2D,
     hint_sound: Sound,
     exit_found_sound: Sound,
     paper_sound: Sound,
@@ -240,6 +241,7 @@ impl GameState {
         let exit_star = assets::load_exit_star_texture("assets/graphics_assets/mazeexitstar.png");
         let hint_icon = assets::load_hint_item_texture("assets/graphics_assets/hintitem.png");
         let map_paper = assets::load_map_paper_texture("assets/graphics_assets/mapimage.png");
+        let player_heart = assets::load_player_heart_texture("dassets/graphics_assets/heart.png");
 
         let hint_sound = load_sound("assets/audio_assets/hint_sound.wav").await.unwrap();
         let exit_found_sound = load_sound("assets/audio_assets/exit_found_sound.wav").await.unwrap();
@@ -277,6 +279,7 @@ impl GameState {
             exit_star,
             hint_icon,
             map_paper,
+            player_heart,
             hint_sound,
             exit_found_sound,
             paper_sound,
@@ -743,6 +746,15 @@ impl GameState {
             self.draw_map_paper_overlay();
         }
 
+
+        if matches!(self.story, StoryPhase::Playing) {
+            if self.player.health > 0 {
+                // draw player hearts on top right
+                self.draw_player_hearts();
+            }
+        }
+
+
         if self.story.show_map_item() {
             self.draw_folded_map_item();
         }
@@ -1201,6 +1213,26 @@ impl GameState {
                 WHITE,
                 DrawTextureParams {
                     dest_size: Some(vec2(size, size)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    fn draw_player_hearts(&self) {
+        let w = screen_width();
+        let h = screen_height();
+
+        for i in 0..self.player.health {
+            let x = w - 60.0 - (i as f32) * 50.0;
+            let y = 20.0;
+            draw_texture_ex(
+                &self.player_heart,
+                x,
+                y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(40.0, 40.0)),
                     ..Default::default()
                 },
             );
