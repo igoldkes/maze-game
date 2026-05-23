@@ -248,7 +248,7 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                 }
             }
         }
-        PauseMenuState::Settings { pause_settings_menu_role, menu_music_settings_toggle, maze_music_settings_toggle, footstep_settings_toggle, wind_rain_settings_toggle, menu_clicks_settings_toggle } => {
+        PauseMenuState::Settings { pause_settings_menu_role } => {
             let prefs = UiPreferences::default();
             let palette = prefs.palette();
             let scale = ui_scale();
@@ -259,7 +259,7 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
             let h = screen_height();
             draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
             let pw = 760.0 * scale;
-            let ph = 340.0 * scale;
+            let ph = 260.0 * scale;
 
             let rect = centered_clamped_rect(pw, ph, margin);
             let x = rect.x;
@@ -282,6 +282,83 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
 
             draw_text(
                 "Settings",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+
+            let labels: [&str; 4] = [
+                    "Game",
+                    "Audio",
+                    "Video",
+                    "Back",
+            ];
+            for i in 0..4 {
+                let ry = row0_y + i as f32 * row_h;
+                if pause_settings_menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 3 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    )
+                }
+            }
+        }
+        PauseMenuState::AudioSettings { pause_settings_menu_role, menu_music_settings_toggle, maze_music_settings_toggle, footstep_settings_toggle, wind_rain_settings_toggle, menu_clicks_settings_toggle } => {
+            let prefs = UiPreferences::default();
+            let palette = prefs.palette();
+            let scale = ui_scale();
+            let margin = safe_margins(scale);
+            let ty = scaled_type(&TypeScale::default(), scale);
+
+            let w = screen_width();
+            let h = screen_height();
+            draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
+            let pw = 760.0 * scale;
+            let ph = 340.0 * scale;
+
+            let rect = centered_clamped_rect(pw, ph, margin);
+            let x = rect.x;
+            let y = rect.y;
+
+            let row0_y = y + 92.0 * scale;
+            let row_h = 38.0 * scale;
+            let row_pad_x = 18.0 * scale;
+            let row_bg_w = rect.w - row_pad_x * 2.0;
+
+            let semantic_id = "in_game_audio_settings";
+
+            draw_modal_chrome(&ModalChromeProps {
+                rect,
+                title: None,
+                palette,
+                focused: true,
+                semantic_id,
+            });
+
+            draw_text(
+                "Audio",
                 x + 20.0,
                 y + 44.0 * scale,
                 ty.headline,
@@ -372,6 +449,154 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                         palette.text_primary,
                         //Color::from_rgba(163, 10, 10, 1),
                     );
+                }
+            }
+        }
+        PauseMenuState::GameSettings { pause_settings_menu_role } => {
+            let prefs = UiPreferences::default();
+            let palette = prefs.palette();
+            let scale = ui_scale();
+            let margin = safe_margins(scale);
+            let ty = scaled_type(&TypeScale::default(), scale);
+
+            let w = screen_width();
+            let h = screen_height();
+            draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
+            let pw = 760.0 * scale;
+            let ph = 140.0 * scale;
+
+            let rect = centered_clamped_rect(pw, ph, margin);
+            let x = rect.x;
+            let y = rect.y;
+
+            let row0_y = y + 92.0 * scale;
+            let row_h = 38.0 * scale;
+            let row_pad_x = 18.0 * scale;
+            let row_bg_w = rect.w - row_pad_x * 2.0;
+
+            let semantic_id = "in_game_game_settings";
+
+            draw_modal_chrome(&ModalChromeProps {
+                rect,
+                title: None,
+                palette,
+                focused: true,
+                semantic_id,
+            });
+
+            draw_text(
+                "Game",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+
+            let labels: [&str; 1] = [
+                    "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if pause_settings_menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 0 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    )
+                }
+            }
+        }
+        PauseMenuState::VideoSettings { pause_settings_menu_role } => {
+            let prefs = UiPreferences::default();
+            let palette = prefs.palette();
+            let scale = ui_scale();
+            let margin = safe_margins(scale);
+            let ty = scaled_type(&TypeScale::default(), scale);
+
+            let w = screen_width();
+            let h = screen_height();
+            draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
+            let pw = 760.0 * scale;
+            let ph = 140.0 * scale;
+
+            let rect = centered_clamped_rect(pw, ph, margin);
+            let x = rect.x;
+            let y = rect.y;
+
+            let row0_y = y + 92.0 * scale;
+            let row_h = 38.0 * scale;
+            let row_pad_x = 18.0 * scale;
+            let row_bg_w = rect.w - row_pad_x * 2.0;
+
+            let semantic_id = "in_game_video_settings";
+
+            draw_modal_chrome(&ModalChromeProps {
+                rect,
+                title: None,
+                palette,
+                focused: true,
+                semantic_id,
+            });
+
+            draw_text(
+                "Video",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+
+            let labels: [&str; 1] = [
+                    "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if pause_settings_menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 0 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    )
                 }
             }
         }

@@ -58,6 +58,13 @@ pub fn load_hint_item_texture(path: &str) -> Texture2D {
     }
 }
 
+pub fn load_trap_item_texture(path: &str) -> Texture2D {
+    match fs::read(path) {
+        Ok(bytes) => Texture2D::from_file_with_format(&bytes, None),
+        Err(_) => build_fallback_trap_texture(),
+    }
+}
+
 /// Load old-paper image for story/map UI (`assets/mapimage.png`).
 /// Falls back to a generated parchment-like texture.
 pub fn load_map_paper_texture(path: &str) -> Texture2D {
@@ -107,6 +114,27 @@ fn build_fallback_hint_texture() -> Texture2D {
     let cy = H as f32 * 0.5;
     let fill = Color::from_rgba(90, 230, 255, 255);
     let edge = Color::from_rgba(210, 250, 255, 255);
+    for y in 0..H {
+        for x in 0..W {
+            let dx = (x as f32 - cx).abs();
+            let dy = (y as f32 - cy).abs();
+            if dx + dy <= 18.0 {
+                let c = if dx + dy >= 15.0 { edge } else { fill };
+                img.set_pixel(x, y, c);
+            }
+        }
+    }
+    Texture2D::from_image(&img)
+}
+
+fn build_fallback_trap_texture() -> Texture2D {
+    const W: u32 = 64;
+    const H: u32 = 64;
+    let mut img = Image::gen_image_color(W as u16, H as u16, Color::from_rgba(0, 0, 0, 0));
+    let cx = W as f32 * 0.5;
+    let cy = H as f32 * 0.5;
+    let fill = Color::from_rgba(190, 140, 70, 255);
+    let edge = Color::from_rgba(60, 35, 0, 255);
     for y in 0..H {
         for x in 0..W {
             let dx = (x as f32 - cx).abs();

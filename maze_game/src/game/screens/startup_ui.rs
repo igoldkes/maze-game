@@ -33,6 +33,10 @@ pub fn draw_startup_overlay(
     footstep_settings_toggle: bool,
     wind_rain_settings_toggle: bool,
     menu_clicks_settings_toggle: bool,
+    hints_settings_toggle: bool,
+    traps_settings_toggle: bool,
+    upgrades_settings_toggle: bool,
+    player_health_settings_toggle: bool,
 ) {
     let w = screen_width();
     let h = screen_height();
@@ -67,7 +71,10 @@ pub fn draw_startup_overlay(
         | StartupState::AskContinueFromLog
         | StartupState::NicknameMustChangeNotice
         | StartupState::ContinueNoRecordNotice => 300.0,
-        StartupState::Settings => 340.0,
+        StartupState::Settings => 260.0,
+        StartupState::AudioSettings => 340.0,
+        StartupState::VideoSettings => 140.0,
+        StartupState::GameSettings => 300.0,
         StartupState::Shop => 300.0,
         _ => 220.0,
     };
@@ -88,6 +95,9 @@ pub fn draw_startup_overlay(
         StartupState::AskDevPassword => "startup-dev-password",
         StartupState::ViewRecords | StartupState::Done => "startup-unused",
         StartupState::Settings => "startup-settings",
+        StartupState::AudioSettings => "settings-audio",
+        StartupState::VideoSettings => "settings-video",
+        StartupState::GameSettings => "settings-game",
         StartupState::Shop => "startup-shop",
         StartupState::PlayerSkins => "shop-playerskins",
         StartupState::MazeThemes => "shop-mazethemes",
@@ -463,6 +473,53 @@ pub fn draw_startup_overlay(
                 palette.text_primary,
             );
             let row0_y = y + 92.0 * scale;
+            let labels: [&str; 4] = [
+                    "Game",
+                    "Audio",
+                    "Video",
+                    "Back",
+            ];
+            for i in 0..4 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                if i != 3 {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+            }
+        }
+        StartupState::AudioSettings => {
+            draw_text(
+                "Audio",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+            let row0_y = y + 92.0 * scale;
             let labels: [&str; 6] = [
                     "Menu Music",
                     "Maze Music",
@@ -513,6 +570,147 @@ pub fn draw_startup_overlay(
                     if menu_clicks_settings_toggle { "On" } else { "Off" },
             ];
             for i in 0..5 {
+                let ry = row0_y_opt + i as f32 * row_h;
+                
+                let label = labels[i];
+
+                if label == "On" {
+                    draw_rectangle(
+                        x + row_pad_x + 150.0 * scale,
+                        ry - 11.0 * scale,
+                        40.0 * scale,
+                        row_h - 8.0,
+                        Color::from_rgba(88, 94, 150, 235),
+                    );
+                    draw_text(
+                        label,
+                        x + row_pad_x + 160.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                        //Color::from_rgba(10, 163, 13, 1),
+                    );
+                } else {
+                    draw_rectangle(
+                        x + row_pad_x + 150.0 * scale,
+                        ry - 11.0 * scale,
+                        40.0 * scale,
+                        row_h - 8.0,
+                        Color::from_rgba(88, 94, 150, 235),
+                    );
+                    draw_text(
+                        label,
+                        x + row_pad_x + 157.5 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                        //Color::from_rgba(163, 10, 10, 1),
+                    );
+                }
+            }
+        }
+        StartupState::VideoSettings => {
+            draw_text(
+                "Video",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 1] = [
+                    "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                if i != 0 {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+                    
+            }
+        }
+        StartupState::GameSettings => {
+            draw_text(
+                "Game",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 5] = [
+                    "Hints",
+                    "Traps",
+                    "Upgrades",
+                    "Player Health",
+                    "Back",
+            ];
+            for i in 0..5 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                if i != 4 {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+                    
+            }
+            
+            let row0_y_opt = y + 92.0 * scale;
+            let labels: [&str; 4] = [
+                    if hints_settings_toggle { "On" } else { "Off" },
+                    if traps_settings_toggle { "On" } else { "Off" },
+                    if upgrades_settings_toggle { "On" } else { "Off" },
+                    if player_health_settings_toggle { "On" } else { "Off" },
+            ];
+            for i in 0..4 {
                 let ry = row0_y_opt + i as f32 * row_h;
                 
                 let label = labels[i];
@@ -607,13 +805,6 @@ pub fn draw_startup_overlay(
                 ty.headline,
                 palette.text_primary,
             );
-
-            draw_startup_records_panel(progress, shop_items_scroll, shop_items_selected);
-            draw_startup_credits_footer();
-            if back_confirm {
-                draw_startup_back_confirm_layer();
-            }
-            return;
         }
         StartupState::MazeThemes => {
             draw_text(
