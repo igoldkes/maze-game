@@ -623,6 +623,7 @@ impl GameState {
             return;
         }
         if is_key_pressed(KeyCode::Escape) {
+            
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
             }
@@ -638,6 +639,7 @@ impl GameState {
                 }
             }
         }
+
         if is_key_pressed(KeyCode::R) && self.end_menu != EndMenuState::WinCelebration {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
@@ -802,7 +804,6 @@ impl GameState {
                 self.draw_player_health();
             }
         }
-
 
         if self.story.show_map_item() {
             self.draw_folded_map_item();
@@ -1712,6 +1713,7 @@ impl GameState {
     fn return_to_main_lobby(&mut self) {
         self.quit_confirm = false;
         self.quit_unsaved_confirm = false;
+        self.menu_state = PauseMenuState::None;
         self.startup = StartupState::AskPlayerRole;
         self.end_menu = EndMenuState::Hidden;
         self.show_credits = false;
@@ -2798,29 +2800,29 @@ impl GameState {
             }
             StartupState::PlayerSkins => {
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
-                    if self.shop_menu_role == 0 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 3;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = self.shop_menu_role.saturating_sub(1);
+                        self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.shop_menu_role == 3 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 0;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = (self.shop_menu_role + 1).min(3);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
                 }
 
@@ -2828,8 +2830,22 @@ impl GameState {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
-                    self.startup = StartupState::Shop;
                     self.startup_menu_role = 0;
+                    self.startup = StartupState::Shop;
+                }
+
+                if is_key_pressed(KeyCode::Enter) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    match self.startup_menu_role {
+                        0 => {
+                            // Back
+                            self.startup_menu_role = 0;
+                            self.startup = StartupState::Shop;
+                        }
+                        _ => {}
+                    }
                 }
 
                 ///////////////////////////////////////////////////////////////////
@@ -2838,29 +2854,29 @@ impl GameState {
             }
             StartupState::MazeThemes => {
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
-                    if self.shop_menu_role == 0 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 3;
+                        self.startup_menu_role = 3;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = self.shop_menu_role.saturating_sub(1);
+                        self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.shop_menu_role == 3 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 0;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = (self.shop_menu_role + 1).min(3);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
                 }
 
@@ -2868,35 +2884,49 @@ impl GameState {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
+                    self.startup_menu_role = 0;
                     self.startup = StartupState::Shop;
-                    self.startup_menu_role = 1;
+                }
+
+                if is_key_pressed(KeyCode::Enter) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    match self.startup_menu_role {
+                        0 => {
+                            // Back
+                            self.startup_menu_role = 1;
+                            self.startup = StartupState::Shop;
+                        }
+                        _ => {}
+                    }
                 }
             }
             StartupState::MenuThemes => {
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
-                    if self.shop_menu_role == 0 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 3;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = self.shop_menu_role.saturating_sub(1);
+                        self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.shop_menu_role == 3 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 0;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = (self.shop_menu_role + 1).min(3);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
                 }
 
@@ -2904,35 +2934,49 @@ impl GameState {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
-                    self.startup = StartupState::Shop;
                     self.startup_menu_role = 2;
+                    self.startup = StartupState::Shop;
+                }
+
+                if is_key_pressed(KeyCode::Enter) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    match self.startup_menu_role {
+                        0 => {
+                            // Back
+                            self.startup_menu_role = 0;
+                            self.startup = StartupState::Shop;
+                        }
+                        _ => {}
+                    }
                 }
             }
             StartupState::MusicThemes => {
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
-                    if self.shop_menu_role == 0 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 3;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = self.shop_menu_role.saturating_sub(1);
+                        self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.shop_menu_role == 3 {
+                    if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = 0;
+                        self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                         }
-                        self.shop_menu_role = (self.shop_menu_role + 1).min(3);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
                 }
                 
@@ -2940,8 +2984,22 @@ impl GameState {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
                     }
-                    self.startup = StartupState::Shop;
                     self.startup_menu_role = 3;
+                    self.startup = StartupState::Shop;
+                }
+
+                if is_key_pressed(KeyCode::Enter) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                    }
+                    match self.startup_menu_role {
+                        0 => {
+                            // Back
+                            self.startup_menu_role = 3;
+                            self.startup = StartupState::Shop;
+                        }
+                        _ => {}
+                    }
                 }
             }
             StartupState::Done => {}

@@ -19,6 +19,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    eprintln!("hi");
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
             std::env::set_current_dir(exe_dir).expect("Failed to set working directory");

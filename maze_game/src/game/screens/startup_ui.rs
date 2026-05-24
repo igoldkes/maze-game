@@ -805,6 +805,40 @@ pub fn draw_startup_overlay(
                 ty.headline,
                 palette.text_primary,
             );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 1] = [
+                "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 0 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+            }
         }
         StartupState::MazeThemes => {
             draw_text(
@@ -814,6 +848,40 @@ pub fn draw_startup_overlay(
                 ty.headline,
                 palette.text_primary,
             );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 1] = [
+                "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 0 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+            }
         }
         StartupState::MenuThemes => {
             draw_text(
@@ -823,6 +891,40 @@ pub fn draw_startup_overlay(
                 ty.headline,
                 palette.text_primary,
             );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 1] = [
+                "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 0 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+            }
         }
         StartupState::MusicThemes => {
             draw_text(
@@ -832,6 +934,40 @@ pub fn draw_startup_overlay(
                 ty.headline,
                 palette.text_primary,
             );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 1] = [
+                "Back",
+            ];
+            for i in 0..1 {
+                let ry = row0_y + i as f32 * row_h;
+                if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                let label = labels[i];
+                if i != 0 {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
+            }
         }
         StartupState::ViewRecords | StartupState::Done => {}
         
