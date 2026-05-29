@@ -7,7 +7,7 @@
 use crate::maze::{Maze, Walls};
 
 use macroquad::prelude::*;
-use macroquad::audio::{load_sound, play_sound_once, Sound};
+use macroquad::audio::{load_sound, play_sound_once, set_sound_volume, Sound};
 use macroquad::rand::gen_range;
 
 /// Player in world space. Uses a **bird’s-eye** hat texture (see `assets.rs` / `assets/`).
@@ -25,6 +25,7 @@ pub struct Player {
     blocked: bool,
     pub paused: bool,
     pub health: usize,
+    pub sfx_volume: usize,
 }
 
 impl Player {
@@ -35,6 +36,7 @@ impl Player {
         cell_y: usize,
         hat_texture: Texture2D,
         stage: usize,
+        sfx_volume: usize,
     ) -> Self {
         let footstep_1 = load_sound("assets/audio_assets/footstep_1.wav").await.unwrap();
         let footstep_2 = load_sound("assets/audio_assets/footstep_2.wav").await.unwrap();
@@ -55,6 +57,7 @@ impl Player {
             blocked: false,
             paused: false,
             health: 5,
+            sfx_volume,
         }
     }
 
@@ -66,7 +69,7 @@ impl Player {
             )
     }
 
-    pub fn update(&mut self, maze: &Maze, origin: Vec2, cell_size: f32, dt: f32) {
+    pub fn update(&mut self, maze: &Maze, origin: Vec2, cell_size: f32, dt: f32, sfx_volume: usize) {
         if !self.paused {
             // Only allow movement if not in pause menu
             if self.cell == self.target_cell {
@@ -76,6 +79,8 @@ impl Player {
                 }
             }
         }
+
+        self.sfx_volume = sfx_volume;
 
         let target_pos = Self::cell_center(origin, cell_size, self.target_cell.0, self.target_cell.1);
         let delta = target_pos - self.pos;
@@ -153,6 +158,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
+                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
                     }
                 }
             }
@@ -163,6 +169,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
+                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
                     }
                 }
             }
@@ -173,6 +180,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
+                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
                     }
                 }
             }
@@ -183,6 +191,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
+                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
                     }
                 }
             }

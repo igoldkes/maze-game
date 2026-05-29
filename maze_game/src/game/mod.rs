@@ -21,7 +21,7 @@ use crate::maze::{
 };
 use macroquad::prelude::*;
 use macroquad::rand::gen_range;
-use macroquad::audio::{load_sound, play_sound, play_sound_once, stop_sound, PlaySoundParams, Sound};
+use macroquad::audio::{load_sound, play_sound, play_sound_once, stop_sound, set_sound_volume, PlaySoundParams, Sound};
 use account_management::next_stage_to_play_after_clears;
 use progress::{ProgressRecord, ProgressService};
 use std::collections::HashSet;
@@ -203,6 +203,9 @@ pub struct GameState {
     footstep_settings_toggle: bool,
     wind_rain_settings_toggle: bool,
     menu_clicks_settings_toggle: bool,
+    music_volume: usize,
+    sfx_volume: usize,
+    menu_clicks_volume: usize,
     hints_settings_toggle: bool,
     traps_settings_toggle: bool,
     upgrades_settings_toggle: bool,
@@ -285,7 +288,7 @@ impl GameState {
         let menu_music = load_sound("assets/audio_assets/menu_music.wav").await.unwrap();
         let music_track = MusicTrack::None;
 
-        let player = Player::new_at_cell_center(vec2(0.0, 0.0), 1.0, 0, 0, hat, 1).await;
+        let player = Player::new_at_cell_center(vec2(0.0, 0.0), 1.0, 0, 0, hat, 1, 1).await;
         let mut s = Self {
             maze: Maze::generate(1, 1),
             cols,
@@ -336,6 +339,9 @@ impl GameState {
             footstep_settings_toggle: true,
             wind_rain_settings_toggle: true,
             menu_clicks_settings_toggle: true,
+            music_volume: 1,
+            sfx_volume: 1,
+            menu_clicks_volume: 1,
             hints_settings_toggle: true,
             traps_settings_toggle: false,
             upgrades_settings_toggle: false,
@@ -392,7 +398,7 @@ impl GameState {
                         &self.maze_music,
                         PlaySoundParams {
                             looped: true,
-                            volume: 1.,
+                            volume: 1.0 * (1.0 / self.music_volume as f32),
                         },
                     );
                     self.music_track = MusicTrack::Maze;
@@ -419,7 +425,7 @@ impl GameState {
                         &self.menu_music,
                         PlaySoundParams {
                             looped: true,
-                            volume: 1.,
+                            volume: 1.0 * (1.0 / self.music_volume as f32),
                         },
                     );
                     self.music_track = MusicTrack::Menu;
@@ -455,7 +461,7 @@ impl GameState {
                     &self.rain_sound,
                     PlaySoundParams {
                         looped: true,
-                        volume: 0.4,
+                        volume: 0.4 * (1.0 / self.sfx_volume as f32),
                     },
                 );
                 self.rain_sound_playing = true;
@@ -479,6 +485,7 @@ impl GameState {
         if matches!(self.story, StoryPhase::IntroExplainAskMap { .. }) && !self.explain_map_clicked {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.explain_map_clicked = true;
         }
@@ -486,6 +493,7 @@ impl GameState {
         if matches!(self.story, StoryPhase::MapReveal { .. }) && !self.map_reveal_clicked {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.map_reveal_clicked = true;
         }
@@ -493,6 +501,7 @@ impl GameState {
         if matches!(self.story, StoryPhase::ControlsPrompt) && !self.controls_clicked {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.controls_clicked = true;
         }
@@ -500,6 +509,7 @@ impl GameState {
         if matches!(self.story, StoryPhase::Playing) && !self.playing_clicked {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.playing_clicked = true;
         }
@@ -518,6 +528,7 @@ impl GameState {
 
         if self.is_map_open && !self.map_sound_played {
             play_sound_once(&self.paper_sound);
+            set_sound_volume(&self.paper_sound, (1.0 / self.sfx_volume as f32));
             self.map_sound_played = true;
         }
 
@@ -530,11 +541,13 @@ impl GameState {
             if is_key_pressed(KeyCode::Y) || is_key_pressed(KeyCode::Enter) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.return_to_main_lobby();
             } else if is_key_pressed(KeyCode::N) || is_key_pressed(KeyCode::Escape) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.quit_unsaved_confirm = false;
             } //else if is_key_pressed(KeyCode::R) {
@@ -587,6 +600,7 @@ impl GameState {
         if is_key_pressed(KeyCode::F1) {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             if self.easy_test_map || self.normal_dev_authenticated {
                 self.debug_overlay = !self.debug_overlay;
@@ -613,6 +627,7 @@ impl GameState {
             if is_key_pressed(KeyCode::Escape) || (!credits_key_pressed && credits_toggle_pressed()) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.show_credits = false;
             }
@@ -626,6 +641,7 @@ impl GameState {
             
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             match self.end_menu {
                 EndMenuState::Hidden => {
@@ -643,6 +659,7 @@ impl GameState {
         if is_key_pressed(KeyCode::R) && self.end_menu != EndMenuState::WinCelebration {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.restart_level();
         }
@@ -661,6 +678,7 @@ impl GameState {
             if self.old_buffer_len != new_buffer_len {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.old_buffer_len = new_buffer_len;
             }
@@ -679,7 +697,7 @@ impl GameState {
 
         if self.can_move_now() {
             self.player
-                .update(&self.maze, self.origin, self.cell_size, dt);
+                .update(&self.maze, self.origin, self.cell_size, dt, self.sfx_volume);
         }
 
         if matches!(self.story, StoryPhase::Playing) {
@@ -687,12 +705,14 @@ impl GameState {
             for hint in &mut self.hints {
                 if !hint.collected && hint.cell == (px, py) && self.hints_settings_toggle {
                     play_sound_once(&self.hint_sound);
+                    set_sound_volume(&self.hint_sound, (1.0 / self.sfx_volume as f32));
                     hint.collected = true;
                     self.hint_map_timer = 5.0;
                 }
             }
             if (px, py) == self.exit_cell {
                 play_sound_once(&self.exit_found_sound);
+                set_sound_volume(&self.exit_found_sound, (1.0 / self.sfx_volume as f32));
                 self.cached_run_elapsed_secs = self
                     .play_timer_start
                     .map(|t| t.elapsed().as_secs_f32());
@@ -936,11 +956,13 @@ impl GameState {
             if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::Settings { .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.menu_state = PauseMenuState::Menu { pause_menu_role: self.pause_menu_role };
             } else if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::Menu { .. } ) && !self.quit_unsaved_confirm_check {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.menu_state = PauseMenuState::None;
                 self.quit_confirm = false;
@@ -983,11 +1005,13 @@ impl GameState {
                         if self.pause_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_menu_role = 3;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_menu_role = self.pause_menu_role.saturating_sub(1);
                         }
@@ -995,11 +1019,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 3;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
@@ -1007,11 +1033,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 5;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
@@ -1019,11 +1047,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
@@ -1031,11 +1061,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
@@ -1047,11 +1079,13 @@ impl GameState {
                         if self.pause_menu_role == 3 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_menu_role = (self.pause_menu_role + 1).min(3);
                         }
@@ -1059,11 +1093,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 3 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(3);
                         }
@@ -1071,11 +1107,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 5 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(5);
                         }
@@ -1083,11 +1121,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(0);
                         }
@@ -1095,11 +1135,13 @@ impl GameState {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(0);
                         }
@@ -1115,6 +1157,7 @@ impl GameState {
                         // Resume
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.quit_confirm = false;
                         self.menu_state = PauseMenuState::None;
@@ -1123,6 +1166,7 @@ impl GameState {
                         // Settings
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.menu_state = PauseMenuState::Settings {
                             pause_settings_menu_role: self.pause_settings_menu_role,
@@ -1132,6 +1176,7 @@ impl GameState {
                         // Main Menu
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         if self.should_warn_unsaved_quit() {
                             self.quit_unsaved_confirm = true;
@@ -1144,6 +1189,7 @@ impl GameState {
                         // Exit
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         std::process::exit(0);
                     }
@@ -1152,6 +1198,7 @@ impl GameState {
             } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::Settings { .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 match self.pause_settings_menu_role {
                     0 => {
@@ -1189,6 +1236,7 @@ impl GameState {
             } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::AudioSettings { .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 match self.pause_settings_menu_role {
                     0 => {
@@ -1222,6 +1270,7 @@ impl GameState {
             } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::GameSettings { .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 match self.pause_settings_menu_role {
                     0 => {
@@ -1234,6 +1283,7 @@ impl GameState {
             } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::VideoSettings { .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 match self.pause_settings_menu_role {
                     0 => {
@@ -1582,11 +1632,13 @@ impl GameState {
                     if self.win_menu_selection == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.win_menu_selection = 2;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.win_menu_selection = self.win_menu_selection.saturating_sub(1);
                     }
@@ -1595,11 +1647,13 @@ impl GameState {
                     if self.win_menu_selection == 2 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.win_menu_selection = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.win_menu_selection = (self.win_menu_selection + 1).min(2);
                     }
@@ -1607,6 +1661,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.win_menu_selection {
                         0 => {
@@ -1787,6 +1842,7 @@ impl GameState {
             if ch.is_ascii_alphanumeric() && self.normal_f1_password_buffer.len() < 32 {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.normal_f1_password_buffer.push(ch);
             }
@@ -1794,12 +1850,14 @@ impl GameState {
         if is_key_pressed(KeyCode::Backspace) && !self.normal_f1_password_buffer.is_empty() {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.normal_f1_password_buffer.pop();
         }
         if is_key_pressed(KeyCode::Escape) {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             self.normal_f1_password_prompt = false;
             self.normal_f1_password_buffer.clear();
@@ -1809,6 +1867,7 @@ impl GameState {
         if is_key_pressed(KeyCode::Enter) {
             if self.menu_clicks_settings_toggle {
                 play_sound_once(&self.click_sound);
+                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
             }
             if self.normal_f1_password_buffer == DEV_PASSWORD {
                 self.normal_dev_authenticated = true;
@@ -1990,6 +2049,7 @@ impl GameState {
             if is_key_pressed(KeyCode::Y) || is_key_pressed(KeyCode::Enter) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.startup_back_confirm = false;
                 if let Some(t) = self.startup_pending_back.take() {
@@ -1998,6 +2058,7 @@ impl GameState {
             } else if is_key_pressed(KeyCode::N) || is_key_pressed(KeyCode::Escape) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                 }
                 self.startup_back_confirm = false;
                 self.startup_pending_back = None;
@@ -2010,6 +2071,7 @@ impl GameState {
                 if get_last_key_pressed().is_some() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.reset_normal_lobby_geometry();
                     self.startup_menu_role = 0;
@@ -2026,11 +2088,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = n_options - 1;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2039,11 +2103,13 @@ impl GameState {
                     if self.startup_menu_role == n_options - 1 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(n_options - 1);
                     }
@@ -2051,6 +2117,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToSplash);
                     return;
@@ -2058,6 +2125,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     if self.progress.has_saved_records() {
                         match self.startup_menu_role {
@@ -2144,11 +2212,13 @@ impl GameState {
                     if self.startup_menu_run_type == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_run_type = 2;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_run_type = self.startup_menu_run_type.saturating_sub(1);
                     }
@@ -2157,11 +2227,13 @@ impl GameState {
                     if self.startup_menu_run_type == 2 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_run_type = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_run_type = (self.startup_menu_run_type + 1).min(2);
                     }
@@ -2169,6 +2241,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup = StartupState::AskPlayerRole;
                     self.startup_menu_role = 0;
@@ -2179,6 +2252,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_run_type {
                         0 => {
@@ -2209,6 +2283,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToAskNewOrContinue);
                     return;
@@ -2226,6 +2301,7 @@ impl GameState {
                     if ch.is_ascii_alphanumeric() && self.startup_player_name_buffer.len() < 32 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_player_name_buffer.push(ch);
                     }
@@ -2233,12 +2309,14 @@ impl GameState {
                 if is_key_pressed(KeyCode::Backspace) && !self.startup_player_name_buffer.is_empty() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_player_name_buffer.pop();
                 }
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     let name = self.startup_player_name_buffer.trim().to_string();
                     if name.is_empty() {
@@ -2262,11 +2340,13 @@ impl GameState {
                     if self.startup_menu_continue == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_continue = 1;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_continue = self.startup_menu_continue.saturating_sub(1);
                     }
@@ -2275,11 +2355,13 @@ impl GameState {
                     if self.startup_menu_continue == 1 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_continue = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_continue = (self.startup_menu_continue + 1).min(1);
                     }
@@ -2287,6 +2369,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToAskPlayerName);
                     return;
@@ -2294,6 +2377,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     if self.startup_menu_continue == 0 {
                         if let Some(ns) = self.startup_continue_next_stage {
@@ -2308,6 +2392,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_player_name_buffer.clear();
                     STARTUP_NAME_INPUT_QUEUE_CLEARED.store(false, Ordering::Relaxed);
@@ -2315,6 +2400,7 @@ impl GameState {
                 } else if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToAskNewOrContinue);
                 }
@@ -2323,6 +2409,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.player_name.clear();
                     self.startup_continue_next_stage = None;
@@ -2333,6 +2420,7 @@ impl GameState {
                 } else if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToAskContinueFromLog);
                 }
@@ -2341,6 +2429,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToAskPlayerRole);
                     return;
@@ -2358,6 +2447,7 @@ impl GameState {
                     if ch.is_ascii_alphanumeric() && self.password_buffer.len() < 32 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.password_buffer.push(ch);
                     }
@@ -2365,6 +2455,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Backspace) && !self.password_buffer.is_empty() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.password_buffer.pop();
                 }
@@ -2372,6 +2463,7 @@ impl GameState {
                     // Changeable dev password (8+ letters/numbers) for test mode access.
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     if self.password_buffer == DEV_PASSWORD {
                         self.easy_test_map = true;
@@ -2405,6 +2497,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.request_startup_back(StartupPendingBack::ToAskPlayerRoleFromRecords);
                     return;
@@ -2412,12 +2505,14 @@ impl GameState {
                 if (is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W)) && self.startup_records_selected > 0 {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_records_selected -= 1;
                 }
                 if (is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S)) && self.startup_records_selected + 1 < recs.len() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_records_selected += 1;
                 }
@@ -2432,6 +2527,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) && !recs.is_empty() {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     if let Some(record) = self
                         .progress
@@ -2448,11 +2544,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 3;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2461,11 +2559,13 @@ impl GameState {
                     if self.startup_menu_role == 3 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(3);
                     }
@@ -2474,6 +2574,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup = StartupState::AskPlayerRole;
                     self.startup_menu_role = if self.progress.has_saved_records() {
@@ -2487,6 +2588,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2522,11 +2624,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 5;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2535,11 +2639,13 @@ impl GameState {
                     if self.startup_menu_role == 5 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(5);
                     }
@@ -2547,6 +2653,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup = StartupState::Settings;
                     self.startup_menu_role = 1;
@@ -2555,6 +2662,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2592,11 +2700,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 4;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2605,11 +2715,13 @@ impl GameState {
                     if self.startup_menu_role == 4 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(4);
                     }
@@ -2617,6 +2729,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup = StartupState::Settings;
                     self.startup_menu_role = 0;
@@ -2625,6 +2738,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2657,11 +2771,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2670,11 +2786,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
@@ -2682,6 +2800,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup = StartupState::Settings;
                     self.startup_menu_role = 2;
@@ -2690,6 +2809,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2707,11 +2827,13 @@ impl GameState {
                         if self.startup_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.startup_menu_role = 4;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                         }
@@ -2719,11 +2841,13 @@ impl GameState {
                         if self.shop_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.shop_menu_role = 3;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.shop_menu_role = self.shop_menu_role.saturating_sub(1);
                         }
@@ -2734,11 +2858,13 @@ impl GameState {
                         if self.startup_menu_role == 4 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.startup_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.startup_menu_role = (self.startup_menu_role + 1).min(4);
                         }
@@ -2746,11 +2872,13 @@ impl GameState {
                         if self.shop_menu_role == 3 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.shop_menu_role = 0;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                             }
                             self.shop_menu_role = (self.shop_menu_role + 1).min(3);
                         }
@@ -2760,6 +2888,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup = StartupState::AskPlayerRole;
                     self.startup_menu_role = 1;
@@ -2770,6 +2899,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2803,11 +2933,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2816,11 +2948,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
@@ -2829,6 +2963,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_menu_role = 0;
                     self.startup = StartupState::Shop;
@@ -2837,6 +2972,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2857,11 +2993,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 3;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2870,11 +3008,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
@@ -2883,6 +3023,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_menu_role = 0;
                     self.startup = StartupState::Shop;
@@ -2891,6 +3032,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2907,11 +3049,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2920,11 +3064,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
@@ -2933,6 +3079,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_menu_role = 2;
                     self.startup = StartupState::Shop;
@@ -2941,6 +3088,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
@@ -2957,11 +3105,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = self.startup_menu_role.saturating_sub(1);
                     }
@@ -2970,11 +3120,13 @@ impl GameState {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = 0;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
+                            set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
                         self.startup_menu_role = (self.startup_menu_role + 1).min(0);
                     }
@@ -2983,6 +3135,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Escape) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     self.startup_menu_role = 3;
                     self.startup = StartupState::Shop;
@@ -2991,6 +3144,7 @@ impl GameState {
                 if is_key_pressed(KeyCode::Enter) {
                     if self.menu_clicks_settings_toggle {
                         play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                     }
                     match self.startup_menu_role {
                         0 => {
