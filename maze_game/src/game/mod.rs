@@ -104,7 +104,7 @@ enum StartupState {
     /// Saved-run list (only opened from main menu after at least one save exists).
     ViewRecords,
     Settings,
-    AudioSettings,
+    AudioSettings { audio_settings_state: AudioSettingsState } ,
     VideoSettings,
     GameSettings,
     Shop,
@@ -136,6 +136,14 @@ enum PauseMenuState {
     VideoSettings {
         pause_settings_menu_role: usize,
     },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum AudioSettingsState {
+    Standard,
+    MusicVolume,
+    SFXVolume,
+    MenuClicksVolume,
 }
 
 #[derive(Clone, Debug)]
@@ -2066,7 +2074,7 @@ impl GameState {
             return;
         }
 
-        match self.startup {
+        match &self.startup {
             StartupState::Splash => {
                 if get_last_key_pressed().is_some() {
                     if self.menu_clicks_settings_toggle {
@@ -2598,7 +2606,7 @@ impl GameState {
                         }
                         1 => {
                             // Audio settings
-                            self.startup = StartupState::AudioSettings;
+                            self.startup = StartupState::AudioSettings { audio_settings_state: AudioSettingsState::Standard };
                             self.startup_menu_role = 0;
                         }
                         2 => {
@@ -2619,14 +2627,14 @@ impl GameState {
                     }
                 }
             }
-            StartupState::AudioSettings => {
+            StartupState::AudioSettings { audio_settings_state: AudioSettingsState::Standard } => {
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {
                     if self.startup_menu_role == 0 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                             set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
-                        self.startup_menu_role = 5;
+                        self.startup_menu_role = 8;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
@@ -2636,7 +2644,7 @@ impl GameState {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.startup_menu_role == 5 {
+                    if self.startup_menu_role == 8 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                             set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
@@ -2647,7 +2655,7 @@ impl GameState {
                             play_sound_once(&self.click_sound);
                             set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
                         }
-                        self.startup_menu_role = (self.startup_menu_role + 1).min(5);
+                        self.startup_menu_role = (self.startup_menu_role + 1).min(8);
                     }
                 }
                 if is_key_pressed(KeyCode::Escape) {
@@ -2687,6 +2695,21 @@ impl GameState {
                             self.menu_clicks_settings_toggle = !self.menu_clicks_settings_toggle;
                         }
                         5 => {
+                            // Music volume
+                            self.startup = StartupState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume };
+                            self.startup_menu_role = self.music_volume;
+                        }
+                        6 => {
+                            // SFX volume
+                            self.startup = StartupState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume };
+                            self.startup_menu_role = self.sfx_volume;
+                        }
+                        7 => {
+                            // Menu clicks volume
+                            self.startup = StartupState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume };
+                            self.startup_menu_role = self.menu_clicks_volume;
+                        }
+                        8 => {
                             // Back
                             self.startup = StartupState::Settings;
                             self.startup_menu_role = 1;
@@ -2694,6 +2717,57 @@ impl GameState {
                         _ => {}
                     }
                 }
+            }
+            StartupState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume } => {
+                if is_key_pressed(KeyCode::Escape) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
+                    }
+                    self.startup = StartupState::AudioSettings { audio_settings_state: AudioSettingsState::Standard };
+                    self.startup_menu_role = 5;
+                }
+
+                if is_key_pressed(KeyCode::Enter) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
+                    }
+                    self.startup = StartupState::AudioSettings { audio_settings_state: AudioSettingsState::Standard };
+                    self.startup_menu_role = 5;
+                }
+
+                if is_key_pressed(KeyCode::A) | is_key_pressed(KeyCode::Left) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
+                    }
+                    if self.music_volume < 10 {
+                        self.music_volume += 1;
+                        self.startup_menu_role = self.music_volume;
+                        set_sound_volume(&self.menu_music, (1.0 / self.music_volume as f32));
+                        set_sound_volume(&self.maze_music, (1.0 / self.music_volume as f32));
+                    }
+                }
+
+                if is_key_pressed(KeyCode::D) | is_key_pressed(KeyCode::Right) {
+                    if self.menu_clicks_settings_toggle {
+                        play_sound_once(&self.click_sound);
+                        set_sound_volume(&self.click_sound, (1.0 / self.menu_clicks_volume as f32));
+                    }
+                    if self.music_volume > 1 {
+                        self.music_volume -= 1;
+                        self.startup_menu_role = self.music_volume;
+                        set_sound_volume(&self.menu_music, (1.0 / self.music_volume as f32));
+                        set_sound_volume(&self.maze_music, (1.0 / self.music_volume as f32));
+                    }
+                }
+            }
+            StartupState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume } => {
+                todo!();
+            }
+            StartupState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume } => {
+                todo!();
             }
             StartupState::GameSettings => {
                 if is_key_pressed(KeyCode::Up) | is_key_pressed(KeyCode::W) {

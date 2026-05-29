@@ -7,6 +7,7 @@ use super::super::ui::components::{draw_modal_chrome, draw_wrapped_text, ModalCh
 use super::super::ui::layout::{centered_clamped_rect, safe_margins, scaled_type, ui_scale};
 use super::super::ui::theme::{TypeScale, UiPreferences};
 use super::super::StartupState;
+use super::super::AudioSettingsState;
 use macroquad::prelude::*;
 
 
@@ -72,7 +73,7 @@ pub fn draw_startup_overlay(
         | StartupState::NicknameMustChangeNotice
         | StartupState::ContinueNoRecordNotice => 300.0,
         StartupState::Settings => 260.0,
-        StartupState::AudioSettings => 340.0,
+        StartupState::AudioSettings { .. } => 460.0,
         StartupState::VideoSettings => 140.0,
         StartupState::GameSettings => 300.0,
         StartupState::Shop => 300.0,
@@ -95,7 +96,7 @@ pub fn draw_startup_overlay(
         StartupState::AskDevPassword => "startup-dev-password",
         StartupState::ViewRecords | StartupState::Done => "startup-unused",
         StartupState::Settings => "startup-settings",
-        StartupState::AudioSettings => "settings-audio",
+        StartupState::AudioSettings { .. } => "settings-audio",
         StartupState::VideoSettings => "settings-video",
         StartupState::GameSettings => "settings-game",
         StartupState::Shop => "startup-shop",
@@ -511,103 +512,234 @@ pub fn draw_startup_overlay(
                 }
             }
         }
-        StartupState::AudioSettings => {
-            draw_text(
-                "Audio",
-                x + 20.0,
-                y + 44.0 * scale,
-                ty.headline,
-                palette.text_primary,
-            );
-            let row0_y = y + 92.0 * scale;
-            let labels: [&str; 6] = [
-                    "Menu Music",
-                    "Maze Music",
-                    "Footsteps",
-                    "Wind and Rain",
-                    "Menu Clicks",
-                    "Back",
-            ];
-            for i in 0..6 {
-                let ry = row0_y + i as f32 * row_h;
-                if menu_role == i {
-                    draw_rectangle(
-                        x + row_pad_x,
-                        ry - 15.0 * scale,
-                        row_bg_w,
-                        row_h,
-                        Color::from_rgba(88, 94, 118, 235),
-                    );
-                }
-                if i != 5 {
-                    let label = labels[i];
+        StartupState::AudioSettings { audio_settings_state } => {
+            match audio_settings_state {
+                AudioSettingsState::Standard => {
                     draw_text(
-                        label,
-                        x + row_pad_x + 10.0 * scale,
-                        ry + 8.0 * scale,
-                        ty.body,
+                        "Audio",
+                        x + 20.0,
+                        y + 44.0 * scale,
+                        ty.headline,
                         palette.text_primary,
                     );
-                } else {
-                    let label = labels[i];
-                    draw_text(
-                        label,
-                        x + row_pad_x + 10.0 * scale,
-                        ry + 8.0 * scale,
-                        ty.body,
-                        Color::from_rgba(255, 180, 160, 255),
-                    );
-                }
+                    let row0_y = y + 92.0 * scale;
+                    let labels: [&str; 9] = [
+                            "Menu Music",
+                            "Maze Music",
+                            "Footsteps",
+                            "Wind and Rain",
+                            "Menu Clicks",
+                            "Music Volume",
+                            "SFX volume",
+                            "Menu Clicks Volume",
+                            "Back",
+                    ];
+                    for i in 0..9 {
+                        let ry = row0_y + i as f32 * row_h;
+                        if menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x,
+                                ry - 15.0 * scale,
+                                row_bg_w,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                        if i != 8 {
+                            let label = labels[i];
+                            draw_text(
+                                label,
+                                x + row_pad_x + 10.0 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                palette.text_primary,
+                            );
+                        } else {
+                            let label = labels[i];
+                            draw_text(
+                                label,
+                                x + row_pad_x + 10.0 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                Color::from_rgba(255, 180, 160, 255),
+                            );
+                        }
+                            
+                    }
                     
+                    let row0_y_opt = y + 92.0 * scale;
+                    let labels: [&str; 5] = [
+                            if menu_music_settings_toggle { "On" } else { "Off" },
+                            if maze_music_settings_toggle { "On" } else { "Off" },
+                            if footstep_settings_toggle { "On" } else { "Off" },
+                            if wind_rain_settings_toggle { "On" } else { "Off" },
+                            if menu_clicks_settings_toggle { "On" } else { "Off" },
+                    ];
+                    for i in 0..5 {
+                        let ry = row0_y_opt + i as f32 * row_h;
+                        
+                        let label = labels[i];
+
+                        if label == "On" {
+                            draw_rectangle(
+                                x + row_pad_x + 150.0 * scale,
+                                ry - 11.0 * scale,
+                                40.0 * scale,
+                                row_h - 8.0,
+                                Color::from_rgba(88, 94, 150, 235),
+                            );
+                            draw_text(
+                                label,
+                                x + row_pad_x + 160.0 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                palette.text_primary,
+                                //Color::from_rgba(10, 163, 13, 1),
+                            );
+                        } else {
+                            draw_rectangle(
+                                x + row_pad_x + 150.0 * scale,
+                                ry - 11.0 * scale,
+                                40.0 * scale,
+                                row_h - 8.0,
+                                Color::from_rgba(88, 94, 150, 235),
+                            );
+                            draw_text(
+                                label,
+                                x + row_pad_x + 157.5 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                palette.text_primary,
+                                //Color::from_rgba(163, 10, 10, 1),
+                            );
+                        }
+                    }
+                }
+                AudioSettingsState::MusicVolume => {
+                    draw_text(
+                        "Audio",
+                        x + 20.0,
+                        y + 44.0 * scale,
+                        ty.headline,
+                        palette.text_primary,
+                    );
+                    let row0_y = y + 92.0 * scale;
+                    let labels: [&str; 9] = [
+                            "Menu Music",
+                            "Maze Music",
+                            "Footsteps",
+                            "Wind and Rain",
+                            "Menu Clicks",
+                            "Music Volume",
+                            "SFX volume",
+                            "Menu Clicks Volume",
+                            "Back",
+                    ];
+                    for i in 0..9 {
+                        let ry = row0_y + i as f32 * row_h;
+                        if i == 5 {
+                            draw_rectangle(
+                                x + row_pad_x + 150.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 150.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                            draw_rectangle(
+                                x + row_pad_x + 180.0 * scale,
+                                ry,
+                                (row_bg_w - 180.0 * scale) * (4.0 / 5.0),
+                                row_h / 8.0,
+                                Color::from_rgba(90, 115, 210, 255),
+                            );
+                            draw_rectangle(
+                                x + row_pad_x + 180.0 * scale + ((x + row_pad_x + 180.0 * scale) / 10.0) * (10.0 - menu_role as f32),
+                                ry,
+                                10.0,
+                                row_h / 2.0,
+                                Color::from_rgba(145, 150, 180, 255),
+                            );
+
+                        }
+                        if i != 8 {
+                            let label = labels[i];
+                            draw_text(
+                                label,
+                                x + row_pad_x + 10.0 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                palette.text_primary,
+                            );
+                        } else {
+                            let label = labels[i];
+                            draw_text(
+                                label,
+                                x + row_pad_x + 10.0 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                Color::from_rgba(255, 180, 160, 255),
+                            );
+                        }
+                            
+                    }
+                    
+                    let row0_y_opt = y + 92.0 * scale;
+                    let labels: [&str; 5] = [
+                            if menu_music_settings_toggle { "On" } else { "Off" },
+                            if maze_music_settings_toggle { "On" } else { "Off" },
+                            if footstep_settings_toggle { "On" } else { "Off" },
+                            if wind_rain_settings_toggle { "On" } else { "Off" },
+                            if menu_clicks_settings_toggle { "On" } else { "Off" },
+                    ];
+                    for i in 0..5 {
+                        let ry = row0_y_opt + i as f32 * row_h;
+                        
+                        let label = labels[i];
+
+                        if label == "On" {
+                            draw_rectangle(
+                                x + row_pad_x + 150.0 * scale,
+                                ry - 11.0 * scale,
+                                40.0 * scale,
+                                row_h - 8.0,
+                                Color::from_rgba(88, 94, 150, 235),
+                            );
+                            draw_text(
+                                label,
+                                x + row_pad_x + 160.0 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                palette.text_primary,
+                                //Color::from_rgba(10, 163, 13, 1),
+                            );
+                        } else {
+                            draw_rectangle(
+                                x + row_pad_x + 150.0 * scale,
+                                ry - 11.0 * scale,
+                                40.0 * scale,
+                                row_h - 8.0,
+                                Color::from_rgba(88, 94, 150, 235),
+                            );
+                            draw_text(
+                                label,
+                                x + row_pad_x + 157.5 * scale,
+                                ry + 8.0 * scale,
+                                ty.body,
+                                palette.text_primary,
+                                //Color::from_rgba(163, 10, 10, 1),
+                            );
+                        }
+                    }
+
+                }
+                AudioSettingsState::SFXVolume => {
+                    todo!();
+                }
+                AudioSettingsState::MenuClicksVolume => {
+                    todo!();
+                }
             }
             
-            let row0_y_opt = y + 92.0 * scale;
-            let labels: [&str; 5] = [
-                    if menu_music_settings_toggle { "On" } else { "Off" },
-                    if maze_music_settings_toggle { "On" } else { "Off" },
-                    if footstep_settings_toggle { "On" } else { "Off" },
-                    if wind_rain_settings_toggle { "On" } else { "Off" },
-                    if menu_clicks_settings_toggle { "On" } else { "Off" },
-            ];
-            for i in 0..5 {
-                let ry = row0_y_opt + i as f32 * row_h;
-                
-                let label = labels[i];
-
-                if label == "On" {
-                    draw_rectangle(
-                        x + row_pad_x + 150.0 * scale,
-                        ry - 11.0 * scale,
-                        40.0 * scale,
-                        row_h - 8.0,
-                        Color::from_rgba(88, 94, 150, 235),
-                    );
-                    draw_text(
-                        label,
-                        x + row_pad_x + 160.0 * scale,
-                        ry + 8.0 * scale,
-                        ty.body,
-                        palette.text_primary,
-                        //Color::from_rgba(10, 163, 13, 1),
-                    );
-                } else {
-                    draw_rectangle(
-                        x + row_pad_x + 150.0 * scale,
-                        ry - 11.0 * scale,
-                        40.0 * scale,
-                        row_h - 8.0,
-                        Color::from_rgba(88, 94, 150, 235),
-                    );
-                    draw_text(
-                        label,
-                        x + row_pad_x + 157.5 * scale,
-                        ry + 8.0 * scale,
-                        ty.body,
-                        palette.text_primary,
-                        //Color::from_rgba(163, 10, 10, 1),
-                    );
-                }
-            }
         }
         StartupState::VideoSettings => {
             draw_text(
