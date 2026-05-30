@@ -6,8 +6,7 @@ use super::super::story::NAME_MAX_LEN;
 use super::super::ui::components::{draw_modal_chrome, draw_wrapped_text, ModalChromeProps};
 use super::super::ui::layout::{centered_clamped_rect, safe_margins, scaled_type, ui_scale};
 use super::super::ui::theme::{TypeScale, UiPreferences};
-use super::super::StartupState;
-use super::super::AudioSettingsState;
+use super::super::{StartupState, AudioSettingsState};
 use macroquad::prelude::*;
 
 

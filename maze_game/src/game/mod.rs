@@ -123,12 +123,16 @@ enum PauseMenuState {
         pause_settings_menu_role: usize,
     },
     AudioSettings {
+        audio_settings_state: AudioSettingsState,
         pause_settings_menu_role: usize,
         menu_music_settings_toggle: bool,
         maze_music_settings_toggle: bool,
         footstep_settings_toggle: bool,
         wind_rain_settings_toggle: bool,
         menu_clicks_settings_toggle: bool,
+        music_volume: usize,
+        sfx_volume: usize,
+        menu_clicks_volume: usize,
     },
     GameSettings {
         pause_settings_menu_role: usize,
@@ -977,8 +981,12 @@ impl GameState {
                 }
                 self.menu_state = PauseMenuState::None;
                 self.quit_confirm = false;
-            } else if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::AudioSettings { .. } | PauseMenuState::GameSettings { .. } | PauseMenuState::VideoSettings { .. } ){
-                self.pause_settings_menu_role = if matches!(self.menu_state, PauseMenuState::AudioSettings { .. } ) {
+            } else if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::Standard, .. } | PauseMenuState::GameSettings { .. } | PauseMenuState::VideoSettings { .. } ){
+                if self.menu_clicks_settings_toggle {
+                    play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                }
+                self.pause_settings_menu_role = if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::Standard, .. } ) {
                     1
                 } else if matches!(self.menu_state, PauseMenuState::GameSettings { .. } ) {
                     0
@@ -986,6 +994,23 @@ impl GameState {
                     2
                 };
                 self.menu_state = PauseMenuState::Settings { pause_settings_menu_role: self.pause_settings_menu_role };
+            } else if is_key_pressed(KeyCode::Escape) && matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume, .. } | PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume, .. } | PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume, .. } ) {
+                if self.menu_clicks_settings_toggle {
+                    play_sound_once(&self.click_sound);
+                    set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                }
+                self.menu_state = PauseMenuState::AudioSettings {
+                    audio_settings_state: AudioSettingsState::Standard,
+                    pause_settings_menu_role: self.pause_settings_menu_role,
+                    menu_music_settings_toggle: self.menu_music_settings_toggle,
+                    maze_music_settings_toggle: self.maze_music_settings_toggle,
+                    footstep_settings_toggle: self.footstep_settings_toggle,
+                    wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                    menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                    music_volume: self.music_volume,
+                    sfx_volume: self.sfx_volume,
+                    menu_clicks_volume: self.menu_clicks_volume,
+                };
             } else if matches!(self.menu_state, PauseMenuState::None) {
                 self.menu_state = PauseMenuState::Menu { pause_menu_role: self.pause_menu_role };
             }
@@ -995,14 +1020,57 @@ impl GameState {
                 self.pause_settings_menu_role = 0;
             } else if matches!(self.menu_state, PauseMenuState::Settings { .. } ) {
                 self.menu_state = PauseMenuState::Settings { pause_settings_menu_role: self.pause_settings_menu_role };
-            } else if matches!(self.menu_state, PauseMenuState::AudioSettings { .. } ) {
+            } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::Standard, .. } ) {
                 self.menu_state = PauseMenuState::AudioSettings {
+                    audio_settings_state: AudioSettingsState::Standard,
                     pause_settings_menu_role: self.pause_settings_menu_role,
                     menu_music_settings_toggle: self.menu_music_settings_toggle,
                     maze_music_settings_toggle: self.maze_music_settings_toggle,
                     footstep_settings_toggle: self.footstep_settings_toggle,
                     wind_rain_settings_toggle: self.wind_rain_settings_toggle,
                     menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                    music_volume: self.music_volume,
+                    sfx_volume: self.sfx_volume,
+                    menu_clicks_volume: self.menu_clicks_volume,
+                };
+            } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume, .. } ) {
+                self.menu_state = PauseMenuState::AudioSettings {
+                    audio_settings_state: AudioSettingsState::MusicVolume,
+                    pause_settings_menu_role: self.pause_settings_menu_role,
+                    menu_music_settings_toggle: self.menu_music_settings_toggle,
+                    maze_music_settings_toggle: self.maze_music_settings_toggle,
+                    footstep_settings_toggle: self.footstep_settings_toggle,
+                    wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                    menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                    music_volume: self.music_volume,
+                    sfx_volume: self.sfx_volume,
+                    menu_clicks_volume: self.menu_clicks_volume,
+                };
+            } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume, .. } ) {
+                self.menu_state = PauseMenuState::AudioSettings {
+                    audio_settings_state: AudioSettingsState::SFXVolume,
+                    pause_settings_menu_role: self.pause_settings_menu_role,
+                    menu_music_settings_toggle: self.menu_music_settings_toggle,
+                    maze_music_settings_toggle: self.maze_music_settings_toggle,
+                    footstep_settings_toggle: self.footstep_settings_toggle,
+                    wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                    menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                    music_volume: self.music_volume,
+                    sfx_volume: self.sfx_volume,
+                    menu_clicks_volume: self.menu_clicks_volume,
+                };
+            } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume, .. } ) {
+                self.menu_state = PauseMenuState::AudioSettings {
+                    audio_settings_state: AudioSettingsState::MenuClicksVolume,
+                    pause_settings_menu_role: self.pause_settings_menu_role,
+                    menu_music_settings_toggle: self.menu_music_settings_toggle,
+                    maze_music_settings_toggle: self.maze_music_settings_toggle,
+                    footstep_settings_toggle: self.footstep_settings_toggle,
+                    wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                    menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                    music_volume: self.music_volume,
+                    sfx_volume: self.sfx_volume,
+                    menu_clicks_volume: self.menu_clicks_volume,
                 };
             } else if matches!(self.menu_state, PauseMenuState::GameSettings { .. } ) {
                 self.menu_state = PauseMenuState::GameSettings { pause_settings_menu_role: self.pause_settings_menu_role };
@@ -1040,13 +1108,13 @@ impl GameState {
                             }
                             self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
-                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { .. } ) {
+                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::Standard, .. } ) {
                         if self.pause_settings_menu_role == 0 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
                                 set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                             }
-                            self.pause_settings_menu_role = 5;
+                            self.pause_settings_menu_role = 8;
                         } else {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
@@ -1083,8 +1151,8 @@ impl GameState {
                             self.pause_settings_menu_role = self.pause_settings_menu_role.saturating_sub(1);
                         }
                     }
-                    
                 }
+
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
                     if matches!(self.menu_state, PauseMenuState::Menu { .. } ) {
                         if self.pause_menu_role == 3 {
@@ -1114,8 +1182,8 @@ impl GameState {
                             }
                             self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(3);
                         }
-                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { .. } ) {
-                        if self.pause_settings_menu_role == 5 {
+                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::Standard, .. } ) {
+                        if self.pause_settings_menu_role == 8 {
                             if self.menu_clicks_settings_toggle {
                                 play_sound_once(&self.click_sound);
                                 set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
@@ -1126,7 +1194,7 @@ impl GameState {
                                 play_sound_once(&self.click_sound);
                                 set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                             }
-                            self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(5);
+                            self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(8);
                         }
                     } else if matches!(self.menu_state, PauseMenuState::GameSettings { .. } ) {
                         if self.pause_settings_menu_role == 0 {
@@ -1155,6 +1223,72 @@ impl GameState {
                                 set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                             }
                             self.pause_settings_menu_role = (self.pause_settings_menu_role + 1).min(0);
+                        }
+                    }
+                }
+
+                if is_key_pressed(KeyCode::A) | is_key_pressed(KeyCode::Left) {
+                    if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume, .. } ) {
+                        if self.music_volume > 0 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                            }
+                            self.music_volume -= 1;
+                            set_sound_volume(&self.menu_music, self.music_volume as f32 / 10.0);
+                            set_sound_volume(&self.maze_music, self.music_volume as f32 / 10.0);
+                        }
+                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume, .. } ) {
+                        if self.sfx_volume > 0 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                            }
+                            self.sfx_volume -= 1;
+                            set_sound_volume(&self.rain_sound, self.sfx_volume as f32 / 10.0);
+                            set_sound_volume(&self.paper_sound, self.sfx_volume as f32 / 10.0);
+                        }
+                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume, .. } ) {
+                        if self.menu_clicks_volume > 0 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                            }
+                            self.menu_clicks_volume -= 1;
+                            set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                        }
+                    }
+                }
+
+                if is_key_pressed(KeyCode::D) | is_key_pressed(KeyCode::Right) {
+                    if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume, .. } ) {
+                        if self.music_volume < 10 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                            }
+                            self.music_volume += 1;
+                            set_sound_volume(&self.menu_music, self.music_volume as f32 / 10.0);
+                            set_sound_volume(&self.maze_music, self.music_volume as f32 / 10.0);
+                        }
+                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume, .. } ) {
+                        if self.sfx_volume < 10 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                            }
+                            self.sfx_volume += 1;
+                            set_sound_volume(&self.rain_sound, self.sfx_volume as f32 / 10.0);
+                            set_sound_volume(&self.paper_sound, self.sfx_volume as f32 / 10.0);
+                        }
+                    } else if matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume, .. } ) {
+                        if self.menu_clicks_volume < 10 {
+                            if self.menu_clicks_settings_toggle {
+                                play_sound_once(&self.click_sound);
+                                set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
+                            }
+                            self.menu_clicks_volume += 1;
+                            set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                         }
                     }
                 }
@@ -1222,13 +1356,17 @@ impl GameState {
                     1 => {
                         // Audio settings
                         self.pause_settings_menu_role = 0;
-                        self.menu_state = PauseMenuState::AudioSettings{
+                        self.menu_state = PauseMenuState::AudioSettings {
+                            audio_settings_state: AudioSettingsState::Standard,
                             pause_settings_menu_role: self.pause_settings_menu_role,
                             menu_music_settings_toggle: self.menu_music_settings_toggle,
                             maze_music_settings_toggle: self.maze_music_settings_toggle,
                             footstep_settings_toggle: self.footstep_settings_toggle,
                             wind_rain_settings_toggle: self.wind_rain_settings_toggle,
                             menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                            music_volume: self.music_volume,
+                            sfx_volume: self.sfx_volume,
+                            menu_clicks_volume: self.menu_clicks_volume,
                         };
                     }
                     2 => {
@@ -1244,7 +1382,7 @@ impl GameState {
                     }
                     _ => {}
                 }
-            } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::AudioSettings { .. } ) {
+            } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::Standard, .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
                     set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
@@ -1272,12 +1410,70 @@ impl GameState {
                         self.menu_clicks_settings_toggle = !self.menu_clicks_settings_toggle;
                     }
                     5 => {
+                        // Music volume
+                        self.menu_state = PauseMenuState::AudioSettings {
+                            audio_settings_state: AudioSettingsState::MusicVolume,
+                            pause_settings_menu_role: self.pause_settings_menu_role,
+                            menu_music_settings_toggle: self.menu_music_settings_toggle,
+                            maze_music_settings_toggle: self.maze_music_settings_toggle,
+                            footstep_settings_toggle: self.footstep_settings_toggle,
+                            wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                            menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                            music_volume: self.music_volume,
+                            sfx_volume: self.sfx_volume,
+                            menu_clicks_volume: self.menu_clicks_volume,
+                        };
+                    }
+                    6 => {
+                        // SFX volume
+                        self.menu_state = PauseMenuState::AudioSettings {
+                            audio_settings_state: AudioSettingsState::SFXVolume,
+                            pause_settings_menu_role: self.pause_settings_menu_role,
+                            menu_music_settings_toggle: self.menu_music_settings_toggle,
+                            maze_music_settings_toggle: self.maze_music_settings_toggle,
+                            footstep_settings_toggle: self.footstep_settings_toggle,
+                            wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                            menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                            music_volume: self.music_volume,
+                            sfx_volume: self.sfx_volume,
+                            menu_clicks_volume: self.menu_clicks_volume,
+                        };
+                    }
+                    7 => {
+                        // Menu clicks volume
+                        self.menu_state = PauseMenuState::AudioSettings {
+                            audio_settings_state: AudioSettingsState::MenuClicksVolume,
+                            pause_settings_menu_role: self.pause_settings_menu_role,
+                            menu_music_settings_toggle: self.menu_music_settings_toggle,
+                            maze_music_settings_toggle: self.maze_music_settings_toggle,
+                            footstep_settings_toggle: self.footstep_settings_toggle,
+                            wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                            menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                            music_volume: self.music_volume,
+                            sfx_volume: self.sfx_volume,
+                            menu_clicks_volume: self.menu_clicks_volume,
+                        };
+                    }
+                    8 => {
                         // Back
                         self.pause_settings_menu_role = 1;
                         self.menu_state = PauseMenuState::Settings { pause_settings_menu_role: self.pause_settings_menu_role };
                     }
                     _ => {}
                 }
+            } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MusicVolume, .. } | PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::SFXVolume, .. } | PauseMenuState::AudioSettings { audio_settings_state: AudioSettingsState::MenuClicksVolume, .. } ) {
+                self.menu_state = PauseMenuState::AudioSettings {
+                    audio_settings_state: AudioSettingsState::Standard,
+                    pause_settings_menu_role: self.pause_settings_menu_role,
+                    menu_music_settings_toggle: self.menu_music_settings_toggle,
+                    maze_music_settings_toggle: self.maze_music_settings_toggle,
+                    footstep_settings_toggle: self.footstep_settings_toggle,
+                    wind_rain_settings_toggle: self.wind_rain_settings_toggle,
+                    menu_clicks_settings_toggle: self.menu_clicks_settings_toggle,
+                    music_volume: self.music_volume,
+                    sfx_volume: self.sfx_volume,
+                    menu_clicks_volume: self.menu_clicks_volume,
+                };
             } else if is_key_pressed(KeyCode::Enter) && matches!(self.menu_state, PauseMenuState::GameSettings { .. } ) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);

@@ -6,7 +6,7 @@ use super::super::ui::theme::{TypeScale, UiPreferences};
 use super::super::ui::{draw_panel, PanelStyle};
 use macroquad::prelude::*;
 
-use super::super::PauseMenuState;
+use super::super::{PauseMenuState, AudioSettingsState};
 
 /// `selected` is 0..=2: play again, restart level, main menu.
 pub fn draw_end_menu_overlay(
@@ -325,7 +325,7 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                 }
             }
         }
-        PauseMenuState::AudioSettings { pause_settings_menu_role, menu_music_settings_toggle, maze_music_settings_toggle, footstep_settings_toggle, wind_rain_settings_toggle, menu_clicks_settings_toggle } => {
+        PauseMenuState::AudioSettings { audio_settings_state, pause_settings_menu_role, menu_music_settings_toggle, maze_music_settings_toggle, footstep_settings_toggle, wind_rain_settings_toggle, menu_clicks_settings_toggle, music_volume, sfx_volume, menu_clicks_volume } => {
             let prefs = UiPreferences::default();
             let palette = prefs.palette();
             let scale = ui_scale();
@@ -336,7 +336,7 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
             let h = screen_height();
             draw_rectangle(0.0, 0.0, w, h, Color::from_rgba(0, 0, 0, 160));
             let pw = 760.0 * scale;
-            let ph = 340.0 * scale;
+            let ph = 460.0 * scale;
 
             let rect = centered_clamped_rect(pw, ph, margin);
             let x = rect.x;
@@ -364,18 +364,133 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                 ty.headline,
                 palette.text_primary,
             );
-
-            let labels: [&str; 6] = [
+            //let row0_y = y + 92.0 * scale;
+            let labels: [&str; 9] = [
                     "Menu Music",
                     "Maze Music",
                     "Footsteps",
                     "Wind and Rain",
                     "Menu Clicks",
+                    "Music Volume",
+                    "SFX volume",
+                    "Menu Clicks Volume",
                     "Back",
             ];
-            for i in 0..6 {
+            for i in 0..9 {
                 let ry = row0_y + i as f32 * row_h;
-                if pause_settings_menu_role == i {
+                if i == 5 {
+                    if !matches!(audio_settings_state, AudioSettingsState::MusicVolume) {
+                        if pause_settings_menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x,
+                                ry - 15.0 * scale,
+                                200.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    } else {
+                        if pause_settings_menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x + 210.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 210.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    }
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale,
+                        ry + 1.0,
+                        x + row_pad_x + 210.0 * scale,
+                        row_h / 8.0,
+                        Color::from_rgba(90, 115, 210, 255),
+                    );
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * music_volume as f32 - music_volume as f32,
+                        ry - 6.0,
+                        10.0,
+                        row_h / 2.0,
+                        Color::from_rgba(145, 150, 180, 255),
+                    );
+                }
+                if i == 6 {
+                    if !matches!(audio_settings_state, AudioSettingsState::SFXVolume) {
+                        if pause_settings_menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x,
+                                ry - 15.0 * scale,
+                                200.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    } else {
+                        if pause_settings_menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x + 210.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 210.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    }
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale,
+                        ry + 1.0,
+                        x + row_pad_x + 210.0 * scale,
+                        row_h / 8.0,
+                        Color::from_rgba(90, 115, 210, 255),
+                    );
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * sfx_volume as f32 - sfx_volume as f32,
+                        ry - 6.0,
+                        10.0,
+                        row_h / 2.0,
+                        Color::from_rgba(145, 150, 180, 255),
+                    );
+                }
+                if i == 7 {
+                    if !matches!(audio_settings_state, AudioSettingsState::MenuClicksVolume) {
+                        if pause_settings_menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x,
+                                ry - 15.0 * scale,
+                                200.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    } else {
+                        if pause_settings_menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x + 210.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 210.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    }
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale,
+                        ry + 1.0,
+                        x + row_pad_x + 210.0 * scale,
+                        row_h / 8.0,
+                        Color::from_rgba(90, 115, 210, 255),
+                    );
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * menu_clicks_volume as f32 - menu_clicks_volume as f32,
+                        ry - 6.0,
+                        10.0,
+                        row_h / 2.0,
+                        Color::from_rgba(145, 150, 180, 255),
+                    );
+                }
+                if pause_settings_menu_role != 5 && pause_settings_menu_role != 6 && pause_settings_menu_role != 7 {
+                    if pause_settings_menu_role == i {
                     draw_rectangle(
                         x + row_pad_x,
                         ry - 15.0 * scale,
@@ -384,8 +499,9 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                         Color::from_rgba(88, 94, 118, 235),
                     );
                 }
-                let label = labels[i];
-                if i != 5 {
+                }
+                if i != 8 {
+                    let label = labels[i];
                     draw_text(
                         label,
                         x + row_pad_x + 10.0 * scale,
@@ -394,16 +510,18 @@ pub fn draw_quit_confirm_overlay( menu_state: PauseMenuState ) {
                         palette.text_primary,
                     );
                 } else {
+                    let label = labels[i];
                     draw_text(
                         label,
                         x + row_pad_x + 10.0 * scale,
                         ry + 8.0 * scale,
                         ty.body,
                         Color::from_rgba(255, 180, 160, 255),
-                    )
+                    );
                 }
+                    
             }
-
+                    
             let row0_y_opt = y + 92.0 * scale;
             let labels: [&str; 5] = [
                     if menu_music_settings_toggle { "On" } else { "Off" },
