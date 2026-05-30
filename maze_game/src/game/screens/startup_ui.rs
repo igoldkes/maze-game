@@ -560,16 +560,16 @@ pub fn draw_startup_overlay(
                     }
                     draw_rectangle(
                         x + row_pad_x + 220.0 * scale,
-                        ry + 1.0,
-                        x + row_pad_x + 210.0 * scale,
-                        row_h / 8.0,
+                        ry + (1.0 * scale),
+                        row_bg_w - 236.0 * scale, // x + row_pad_x + 210.0 * scale,
+                        row_h / (8.0 * scale),
                         Color::from_rgba(90, 115, 210, 255),
                     );
                     draw_rectangle(
-                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * music_volume as f32 - music_volume as f32,
-                        ry - 6.0,
-                        10.0,
-                        row_h / 2.0,
+                        x + row_pad_x + 220.0 * scale + (row_bg_w - 236.0 * scale) / 10.0 * music_volume as f32 - music_volume as f32 * scale,
+                        ry - (6.0 * scale),
+                        10.0 * scale,
+                        row_h / (2.0 * scale),
                         Color::from_rgba(145, 150, 180, 255),
                     );
                 }
@@ -597,16 +597,16 @@ pub fn draw_startup_overlay(
                     }
                     draw_rectangle(
                         x + row_pad_x + 220.0 * scale,
-                        ry + 1.0,
-                        x + row_pad_x + 210.0 * scale,
-                        row_h / 8.0,
+                        ry + (1.0 * scale),
+                        row_bg_w - 236.0 * scale, // x + row_pad_x + 210.0 * scale,
+                        row_h / (8.0 * scale),
                         Color::from_rgba(90, 115, 210, 255),
                     );
                     draw_rectangle(
-                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * sfx_volume as f32 - sfx_volume as f32,
-                        ry - 6.0,
-                        10.0,
-                        row_h / 2.0,
+                        x + row_pad_x + 220.0 * scale + (row_bg_w - 236.0 * scale) / 10.0 * sfx_volume as f32 - sfx_volume as f32 * scale,
+                        ry - (6.0 * scale),
+                        10.0 * scale,
+                        row_h / (2.0 * scale),
                         Color::from_rgba(145, 150, 180, 255),
                     );
                 }
@@ -634,16 +634,16 @@ pub fn draw_startup_overlay(
                     }
                     draw_rectangle(
                         x + row_pad_x + 220.0 * scale,
-                        ry + 1.0,
-                        x + row_pad_x + 210.0 * scale,
-                        row_h / 8.0,
+                        ry + (1.0 * scale),
+                        row_bg_w - 236.0 * scale, // x + row_pad_x + 210.0 * scale,
+                        row_h / (8.0 * scale),
                         Color::from_rgba(90, 115, 210, 255),
                     );
                     draw_rectangle(
-                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * menu_clicks_volume as f32 - menu_clicks_volume as f32,
-                        ry - 6.0,
-                        10.0,
-                        row_h / 2.0,
+                        x + row_pad_x + 220.0 * scale + (row_bg_w - 236.0 * scale) / 10.0 * menu_clicks_volume as f32 - menu_clicks_volume as f32 * scale,
+                        ry - (6.0 * scale),
+                        10.0 * scale,
+                        row_h / (2.0 * scale),
                         Color::from_rgba(145, 150, 180, 255),
                     );
                 }
