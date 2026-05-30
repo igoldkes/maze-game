@@ -38,6 +38,9 @@ pub fn draw_startup_overlay(
     traps_settings_toggle: bool,
     upgrades_settings_toggle: bool,
     player_health_settings_toggle: bool,
+    music_volume: usize,
+    sfx_volume: usize,
+    menu_clicks_volume: usize,
 ) {
     let w = screen_width();
     let h = screen_height();
@@ -513,233 +516,218 @@ pub fn draw_startup_overlay(
             }
         }
         StartupState::AudioSettings { audio_settings_state } => {
-            match audio_settings_state {
-                AudioSettingsState::Standard => {
-                    draw_text(
-                        "Audio",
-                        x + 20.0,
-                        y + 44.0 * scale,
-                        ty.headline,
-                        palette.text_primary,
-                    );
-                    let row0_y = y + 92.0 * scale;
-                    let labels: [&str; 9] = [
-                            "Menu Music",
-                            "Maze Music",
-                            "Footsteps",
-                            "Wind and Rain",
-                            "Menu Clicks",
-                            "Music Volume",
-                            "SFX volume",
-                            "Menu Clicks Volume",
-                            "Back",
-                    ];
-                    for i in 0..9 {
-                        let ry = row0_y + i as f32 * row_h;
+            draw_text(
+                "Audio",
+                x + 20.0,
+                y + 44.0 * scale,
+                ty.headline,
+                palette.text_primary,
+            );
+            let row0_y = y + 92.0 * scale;
+            let labels: [&str; 9] = [
+                    "Menu Music",
+                    "Maze Music",
+                    "Footsteps",
+                    "Wind and Rain",
+                    "Menu Clicks",
+                    "Music Volume",
+                    "SFX volume",
+                    "Menu Clicks Volume",
+                    "Back",
+            ];
+            for i in 0..9 {
+                let ry = row0_y + i as f32 * row_h;
+                if i == 5 {
+                    if !matches!(audio_settings_state, AudioSettingsState::MusicVolume) {
                         if menu_role == i {
                             draw_rectangle(
                                 x + row_pad_x,
                                 ry - 15.0 * scale,
-                                row_bg_w,
+                                200.0 * scale,
                                 row_h,
                                 Color::from_rgba(88, 94, 118, 235),
                             );
                         }
-                        if i != 8 {
-                            let label = labels[i];
-                            draw_text(
-                                label,
-                                x + row_pad_x + 10.0 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                palette.text_primary,
-                            );
-                        } else {
-                            let label = labels[i];
-                            draw_text(
-                                label,
-                                x + row_pad_x + 10.0 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                Color::from_rgba(255, 180, 160, 255),
-                            );
-                        }
-                            
-                    }
-                    
-                    let row0_y_opt = y + 92.0 * scale;
-                    let labels: [&str; 5] = [
-                            if menu_music_settings_toggle { "On" } else { "Off" },
-                            if maze_music_settings_toggle { "On" } else { "Off" },
-                            if footstep_settings_toggle { "On" } else { "Off" },
-                            if wind_rain_settings_toggle { "On" } else { "Off" },
-                            if menu_clicks_settings_toggle { "On" } else { "Off" },
-                    ];
-                    for i in 0..5 {
-                        let ry = row0_y_opt + i as f32 * row_h;
-                        
-                        let label = labels[i];
-
-                        if label == "On" {
+                    } else {
+                        if menu_role == i {
                             draw_rectangle(
-                                x + row_pad_x + 150.0 * scale,
-                                ry - 11.0 * scale,
-                                40.0 * scale,
-                                row_h - 8.0,
-                                Color::from_rgba(88, 94, 150, 235),
-                            );
-                            draw_text(
-                                label,
-                                x + row_pad_x + 160.0 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                palette.text_primary,
-                                //Color::from_rgba(10, 163, 13, 1),
-                            );
-                        } else {
-                            draw_rectangle(
-                                x + row_pad_x + 150.0 * scale,
-                                ry - 11.0 * scale,
-                                40.0 * scale,
-                                row_h - 8.0,
-                                Color::from_rgba(88, 94, 150, 235),
-                            );
-                            draw_text(
-                                label,
-                                x + row_pad_x + 157.5 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                palette.text_primary,
-                                //Color::from_rgba(163, 10, 10, 1),
+                                x + row_pad_x + 210.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 210.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
                             );
                         }
                     }
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale,
+                        ry + 1.0,
+                        x + row_pad_x + 210.0 * scale,
+                        row_h / 8.0,
+                        Color::from_rgba(90, 115, 210, 255),
+                    );
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * music_volume as f32 - music_volume as f32,
+                        ry - 6.0,
+                        10.0,
+                        row_h / 2.0,
+                        Color::from_rgba(145, 150, 180, 255),
+                    );
                 }
-                AudioSettingsState::MusicVolume => {
+                if i == 6 {
+                    if !matches!(audio_settings_state, AudioSettingsState::SFXVolume) {
+                        if menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x,
+                                ry - 15.0 * scale,
+                                200.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    } else {
+                        if menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x + 210.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 210.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    }
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale,
+                        ry + 1.0,
+                        x + row_pad_x + 210.0 * scale,
+                        row_h / 8.0,
+                        Color::from_rgba(90, 115, 210, 255),
+                    );
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * sfx_volume as f32 - sfx_volume as f32,
+                        ry - 6.0,
+                        10.0,
+                        row_h / 2.0,
+                        Color::from_rgba(145, 150, 180, 255),
+                    );
+                }
+                if i == 7 {
+                    if !matches!(audio_settings_state, AudioSettingsState::MenuClicksVolume) {
+                        if menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x,
+                                ry - 15.0 * scale,
+                                200.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    } else {
+                        if menu_role == i {
+                            draw_rectangle(
+                                x + row_pad_x + 210.0 * scale,
+                                ry - 15.0 * scale,
+                                row_bg_w - 210.0 * scale,
+                                row_h,
+                                Color::from_rgba(88, 94, 118, 235),
+                            );
+                        }
+                    }
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale,
+                        ry + 1.0,
+                        x + row_pad_x + 210.0 * scale,
+                        row_h / 8.0,
+                        Color::from_rgba(90, 115, 210, 255),
+                    );
+                    draw_rectangle(
+                        x + row_pad_x + 220.0 * scale + (x + row_pad_x + 210.0 * scale) / 10.0 * menu_clicks_volume as f32 - menu_clicks_volume as f32,
+                        ry - 6.0,
+                        10.0,
+                        row_h / 2.0,
+                        Color::from_rgba(145, 150, 180, 255),
+                    );
+                }
+                if menu_role != 5 && menu_role != 6 && menu_role != 7 {
+                    if menu_role == i {
+                    draw_rectangle(
+                        x + row_pad_x,
+                        ry - 15.0 * scale,
+                        row_bg_w,
+                        row_h,
+                        Color::from_rgba(88, 94, 118, 235),
+                    );
+                }
+                }
+                if i != 8 {
+                    let label = labels[i];
                     draw_text(
-                        "Audio",
-                        x + 20.0,
-                        y + 44.0 * scale,
-                        ty.headline,
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
                         palette.text_primary,
                     );
-                    let row0_y = y + 92.0 * scale;
-                    let labels: [&str; 9] = [
-                            "Menu Music",
-                            "Maze Music",
-                            "Footsteps",
-                            "Wind and Rain",
-                            "Menu Clicks",
-                            "Music Volume",
-                            "SFX volume",
-                            "Menu Clicks Volume",
-                            "Back",
-                    ];
-                    for i in 0..9 {
-                        let ry = row0_y + i as f32 * row_h;
-                        if i == 5 {
-                            draw_rectangle(
-                                x + row_pad_x + 150.0 * scale,
-                                ry - 15.0 * scale,
-                                row_bg_w - 150.0 * scale,
-                                row_h,
-                                Color::from_rgba(88, 94, 118, 235),
-                            );
-                            draw_rectangle(
-                                x + row_pad_x + 180.0 * scale,
-                                ry,
-                                (row_bg_w - 180.0 * scale) * (4.0 / 5.0),
-                                row_h / 8.0,
-                                Color::from_rgba(90, 115, 210, 255),
-                            );
-                            draw_rectangle(
-                                x + row_pad_x + 180.0 * scale + ((x + row_pad_x + 180.0 * scale) / 10.0) * (10.0 - menu_role as f32),
-                                ry,
-                                10.0,
-                                row_h / 2.0,
-                                Color::from_rgba(145, 150, 180, 255),
-                            );
-
-                        }
-                        if i != 8 {
-                            let label = labels[i];
-                            draw_text(
-                                label,
-                                x + row_pad_x + 10.0 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                palette.text_primary,
-                            );
-                        } else {
-                            let label = labels[i];
-                            draw_text(
-                                label,
-                                x + row_pad_x + 10.0 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                Color::from_rgba(255, 180, 160, 255),
-                            );
-                        }
-                            
-                    }
+                } else {
+                    let label = labels[i];
+                    draw_text(
+                        label,
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
                     
-                    let row0_y_opt = y + 92.0 * scale;
-                    let labels: [&str; 5] = [
-                            if menu_music_settings_toggle { "On" } else { "Off" },
-                            if maze_music_settings_toggle { "On" } else { "Off" },
-                            if footstep_settings_toggle { "On" } else { "Off" },
-                            if wind_rain_settings_toggle { "On" } else { "Off" },
-                            if menu_clicks_settings_toggle { "On" } else { "Off" },
-                    ];
-                    for i in 0..5 {
-                        let ry = row0_y_opt + i as f32 * row_h;
-                        
-                        let label = labels[i];
+            }
+                    
+            let row0_y_opt = y + 92.0 * scale;
+            let labels: [&str; 5] = [
+                    if menu_music_settings_toggle { "On" } else { "Off" },
+                    if maze_music_settings_toggle { "On" } else { "Off" },
+                    if footstep_settings_toggle { "On" } else { "Off" },
+                    if wind_rain_settings_toggle { "On" } else { "Off" },
+                    if menu_clicks_settings_toggle { "On" } else { "Off" },
+            ];
+            for i in 0..5 {
+                let ry = row0_y_opt + i as f32 * row_h;
+                
+                let label = labels[i];
 
-                        if label == "On" {
-                            draw_rectangle(
-                                x + row_pad_x + 150.0 * scale,
-                                ry - 11.0 * scale,
-                                40.0 * scale,
-                                row_h - 8.0,
-                                Color::from_rgba(88, 94, 150, 235),
-                            );
-                            draw_text(
-                                label,
-                                x + row_pad_x + 160.0 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                palette.text_primary,
-                                //Color::from_rgba(10, 163, 13, 1),
-                            );
-                        } else {
-                            draw_rectangle(
-                                x + row_pad_x + 150.0 * scale,
-                                ry - 11.0 * scale,
-                                40.0 * scale,
-                                row_h - 8.0,
-                                Color::from_rgba(88, 94, 150, 235),
-                            );
-                            draw_text(
-                                label,
-                                x + row_pad_x + 157.5 * scale,
-                                ry + 8.0 * scale,
-                                ty.body,
-                                palette.text_primary,
-                                //Color::from_rgba(163, 10, 10, 1),
-                            );
-                        }
-                    }
-
-                }
-                AudioSettingsState::SFXVolume => {
-                    todo!();
-                }
-                AudioSettingsState::MenuClicksVolume => {
-                    todo!();
+                if label == "On" {
+                    draw_rectangle(
+                        x + row_pad_x + 150.0 * scale,
+                        ry - 11.0 * scale,
+                        40.0 * scale,
+                        row_h - 8.0,
+                        Color::from_rgba(88, 94, 150, 235),
+                    );
+                    draw_text(
+                        label,
+                        x + row_pad_x + 160.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                        //Color::from_rgba(10, 163, 13, 1),
+                    );
+                } else {
+                    draw_rectangle(
+                        x + row_pad_x + 150.0 * scale,
+                        ry - 11.0 * scale,
+                        40.0 * scale,
+                        row_h - 8.0,
+                        Color::from_rgba(88, 94, 150, 235),
+                    );
+                    draw_text(
+                        label,
+                        x + row_pad_x + 157.5 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                        //Color::from_rgba(163, 10, 10, 1),
+                    );
                 }
             }
-            
         }
         StartupState::VideoSettings => {
             draw_text(

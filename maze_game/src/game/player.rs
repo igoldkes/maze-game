@@ -158,7 +158,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
-                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
+                        set_sound_volume(&self.footsteps[step], self.sfx_volume as f32 / 10.0);
                     }
                 }
             }
@@ -169,7 +169,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
-                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
+                        set_sound_volume(&self.footsteps[step], self.sfx_volume as f32 / 10.0);
                     }
                 }
             }
@@ -180,7 +180,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
-                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
+                        set_sound_volume(&self.footsteps[step], self.sfx_volume as f32 / 10.0);
                     }
                 }
             }
@@ -191,7 +191,7 @@ impl Player {
                 if !self.blocked {
                     if self.footstep_settings_toggle {
                         play_sound_once(&self.footsteps[step]);
-                        set_sound_volume(&self.footsteps[step], (1.0 / self.sfx_volume as f32));
+                        set_sound_volume(&self.footsteps[step], self.sfx_volume as f32 / 10.0);
                     }
                 }
             }
