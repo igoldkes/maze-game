@@ -12,6 +12,7 @@ use macroquad::prelude::*;
 
 #[allow(clippy::too_many_arguments)]
 pub fn draw_startup_overlay(
+    startup_pending_back_toaskplayername: bool,
     startup: &StartupState,
     progress: &ProgressService,
     password_buffer: &str,
@@ -47,7 +48,7 @@ pub fn draw_startup_overlay(
 
     if *startup == StartupState::ViewRecords {
         draw_startup_records_panel(progress, startup_records_scroll, startup_records_selected);
-        draw_startup_credits_footer();
+        //draw_startup_credits_footer();
         if back_confirm {
             draw_startup_back_confirm_layer();
         }
@@ -123,25 +124,39 @@ pub fn draw_startup_overlay(
         StartupState::Splash => {
             draw_text(
                 "Maze Game",
-                x + 20.0,
+                w / 2.0 - (163.0 * scale) / 2.0,
                 y + 72.0 * scale,
                 ty.headline + 8.0 * scale,
                 palette.text_primary,
             );
+            //draw_rectangle(
+            //    (x + 20.0 * scale),
+            //    (y + 170.0 * scale - 10.0 * scale),
+            //    273.0 * scale,
+            //    14.0 * scale,
+            //    Color::from_rgba(255, 0, 0, 180),
+            //);
             draw_text(
                 "Press any key to start",
-                x + 20.0,
+                w / 2.0 - (250.0 * scale) / 2.0,
                 y + 130.0 * scale,
                 ty.title,
                 palette.accent_ok,
             );
             draw_text(
-                "Keyboard controls are shown before each step.",
-                x + 20.0,
-                y + 170.0 * scale,
+                "Use WASD or arrow keys to navigate menu",
+                w / 2.0 - (273.0 * scale) / 2.0,
+                y + 200.0 * scale,
                 ty.body_min,
                 palette.text_muted,
             );
+            //draw_text(
+                //    "Keyboard controls are shown before each step.",
+            //    x + 20.0,
+            //    y + 170.0 * scale,
+            //    ty.body_min,
+            //    palette.text_muted,
+            //);
         }
         StartupState::AskPlayerRole => {
             draw_text(
@@ -353,8 +368,8 @@ pub fn draw_startup_overlay(
             );
             let row0_y = y + 118.0 * scale;
             let yes_line = format!("Yes — continue from stage {}", next_s);
-            let labels = [yes_line.as_str(), "No — use a different nickname"];
-            for i in 0..2 {
+            let labels = [yes_line.as_str(), "No — use a different nickname", "Back"];
+            for i in 0..3 {
                 let ry = row0_y + i as f32 * row_h;
                 if menu_continue == i {
                     draw_rectangle(
@@ -365,18 +380,28 @@ pub fn draw_startup_overlay(
                         Color::from_rgba(88, 94, 118, 235),
                     );
                 }
-                draw_text(
-                    labels[i],
-                    x + row_pad_x + 10.0 * scale,
-                    ry + 8.0 * scale,
-                    ty.body,
-                    palette.text_primary,
-                );
+                if i != 2 {
+                    draw_text(
+                        labels[i],
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        palette.text_primary,
+                    );
+                } else {
+                    draw_text(
+                        labels[i],
+                        x + row_pad_x + 10.0 * scale,
+                        ry + 8.0 * scale,
+                        ty.body,
+                        Color::from_rgba(255, 180, 160, 255),
+                    );
+                }
             }
             draw_text(
                 "↑ ↓ select · Enter confirm · Esc back",
-                x + 20.0,
-                row0_y + 2.0 * row_h + 10.0 * scale,
+                x + 20.0 * scale,
+                row0_y + 2.0 * scale * row_h + 70.0 * scale,
                 ty.body_min,
                 palette.text_muted,
             );
@@ -1091,9 +1116,9 @@ pub fn draw_startup_overlay(
         StartupState::ViewRecords | StartupState::Done => {}
         
     }
-    draw_startup_credits_footer();
+    //draw_startup_credits_footer();
 
-    if back_confirm {
+    if back_confirm && !startup_pending_back_toaskplayername {
         draw_startup_back_confirm_layer();
     }
 }

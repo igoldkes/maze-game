@@ -263,6 +263,7 @@ pub struct GameState {
     startup_menu_continue: usize,
     startup_back_confirm: bool,
     startup_pending_back: Option<StartupPendingBack>,
+    startup_pending_back_toaskplayername: bool,
     /// Elapsed play time **frozen at the moment the exit was reached** (so win-menu idle time is not counted).
     cached_run_elapsed_secs: Option<f32>,
     /// After a win, we append to `player_progress.jsonl` at most once when the player picks an option.
@@ -383,6 +384,7 @@ impl GameState {
             startup_menu_continue: 0,
             startup_back_confirm: false,
             startup_pending_back: None,
+            startup_pending_back_toaskplayername: false,
             cached_run_elapsed_secs: None,
             win_run_saved_to_log: false,
             win_menu_selection: 0,
@@ -765,6 +767,7 @@ impl GameState {
     pub fn draw(&mut self) {
         if self.startup != StartupState::Done {
             draw_startup_overlay(
+                self.startup_pending_back_toaskplayername,
                 &self.startup,
                 &self.progress,
                 &self.password_buffer,
@@ -2249,10 +2252,18 @@ impl GameState {
     fn request_startup_back(&mut self, target: StartupPendingBack) {
         self.startup_back_confirm = true;
         self.startup_pending_back = Some(target);
+        match self.startup_pending_back {
+            Some(t) if matches!(t, StartupPendingBack::ToAskPlayerName) => {
+                self.startup_pending_back_toaskplayername = true;
+            }
+            _ => {
+                self.startup_pending_back_toaskplayername = false;
+            }
+        }
     }
 
     fn handle_startup_input(&mut self) {
-        if self.startup_back_confirm {
+        if self.startup_back_confirm && !self.startup_pending_back_toaskplayername {
             if is_key_pressed(KeyCode::Y) || is_key_pressed(KeyCode::Enter) {
                 if self.menu_clicks_settings_toggle {
                     play_sound_once(&self.click_sound);
@@ -2270,6 +2281,13 @@ impl GameState {
                 self.startup_back_confirm = false;
                 self.startup_pending_back = None;
             }
+            return;
+        } else if self.startup_back_confirm && self.startup_pending_back_toaskplayername {
+            self.startup_back_confirm = false;
+            if let Some(t) = self.startup_pending_back.take() {
+                self.apply_startup_pending_back(t);
+            }
+            self.startup_pending_back_toaskplayername = false;
             return;
         }
 
@@ -2549,7 +2567,7 @@ impl GameState {
                             play_sound_once(&self.click_sound);
                             set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                         }
-                        self.startup_menu_continue = 1;
+                        self.startup_menu_continue = 2;
                     } else {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
@@ -2559,7 +2577,7 @@ impl GameState {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) | is_key_pressed(KeyCode::S) {
-                    if self.startup_menu_continue == 1 {
+                    if self.startup_menu_continue == 2 {
                         if self.menu_clicks_settings_toggle {
                             play_sound_once(&self.click_sound);
                             set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
@@ -2570,7 +2588,7 @@ impl GameState {
                             play_sound_once(&self.click_sound);
                             set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                         }
-                        self.startup_menu_continue = (self.startup_menu_continue + 1).min(1);
+                        self.startup_menu_continue = (self.startup_menu_continue + 1).min(2);
                     }
                 }
                 if is_key_pressed(KeyCode::Escape) {
@@ -2586,12 +2604,22 @@ impl GameState {
                         play_sound_once(&self.click_sound);
                         set_sound_volume(&self.click_sound, self.menu_clicks_volume as f32 / 10.0);
                     }
-                    if self.startup_menu_continue == 0 {
-                        if let Some(ns) = self.startup_continue_next_stage {
-                            self.begin_normal_play_after_startup(ns, false);
+                    match self.startup_menu_continue {
+                        0 => {
+                            // Continue
+                            if let Some(ns) = self.startup_continue_next_stage {
+                                self.begin_normal_play_after_startup(ns, false);
+                            }
                         }
-                    } else {
-                        self.startup = StartupState::NicknameMustChangeNotice;
+                        1 => {
+                            self.startup = StartupState::NicknameMustChangeNotice;
+                        }
+                        2 => {
+                            // Back
+                            self.request_startup_back(StartupPendingBack::ToAskPlayerName);
+                            return;
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -3244,18 +3272,22 @@ impl GameState {
                     match self.startup_menu_role {
                         0 => {
                             // Player Skins
+                            self.startup_menu_role = 0;
                             self.startup = StartupState::PlayerSkins;
                         }
                         1 => {
                             // Maze Themes
+                            self.startup_menu_role = 0;
                             self.startup = StartupState::MazeThemes;
                         }
                         2 => {
                             // Menu Themes
+                            self.startup_menu_role = 0;
                             self.startup = StartupState::MenuThemes;
                         }
                         3 => {
                             // Music Themes
+                            self.startup_menu_role = 0;
                             self.startup = StartupState::MusicThemes;
                         }
                         4 => {
