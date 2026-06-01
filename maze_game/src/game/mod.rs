@@ -290,7 +290,7 @@ impl GameState {
         let hint_icon = assets::load_hint_item_texture("assets/graphics_assets/hintitem.png");
         let map_paper = assets::load_map_paper_texture("assets/graphics_assets/mapimage.png");
         let player_heart_icon = assets::load_player_heart_texture("assets/graphics_assets/heart.png");
-        let trap_icon = assets::load_trap_item_texture("assets/graphics_assets/bear_trap.png");
+        let trap_icon = assets::load_trap_item_texture("assets/graphics_assets/trap_singleframe.png");
 
         let hint_sound = load_sound("assets/audio_assets/hint_sound.wav").await.unwrap();
         let exit_found_sound = load_sound("assets/audio_assets/exit_found_sound.wav").await.unwrap();
@@ -1684,8 +1684,8 @@ impl GameState {
                 continue;
             }
             let size = cell_size * 0.6;
-            let x = draw_origin.x + trap.cell.0 as f32 * cell_size + (cell_size - size) * 0.6 - 0.2;
-            let y = draw_origin.y + trap.cell.1 as f32 * cell_size + (cell_size - size) * 0.6 - 0.5;
+            let x = draw_origin.x + trap.cell.0 as f32 * cell_size + (cell_size - size) * 0.6 - 0.4; // * 0.6 - 0.2;
+            let y = draw_origin.y + trap.cell.1 as f32 * cell_size + (cell_size - size) * 0.6 - 0.45;// * 0.6 - 0.5;
             draw_texture_ex(
                 &self.trap_icon,
                 x,
