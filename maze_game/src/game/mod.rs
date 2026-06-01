@@ -2256,6 +2256,9 @@ impl GameState {
             Some(t) if matches!(t, StartupPendingBack::ToAskPlayerName) => {
                 self.startup_pending_back_toaskplayername = true;
             }
+            Some(t) if matches!(t, StartupPendingBack::ToAskNewOrContinue) => {
+                self.startup_pending_back_toaskplayername = true;
+            }
             _ => {
                 self.startup_pending_back_toaskplayername = false;
             }
