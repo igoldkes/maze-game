@@ -78,6 +78,12 @@ struct HeartItem {
     collected: bool,
 }
 
+#[derive(Clone, Debug)]
+struct PathMarker {
+    cell: (usize, usize),
+    collected: bool,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum EndMenuState {
     Hidden,
@@ -173,11 +179,13 @@ pub struct GameState {
     cell_size: f32,
     origin: Vec2,
     player: Player,
+    player_health: usize,
     start_cell: (usize, usize),
     exit_cell: (usize, usize),
     hints: Vec<HintItem>,
     traps: Vec<TrapItem>,
     hearts: Vec<HeartItem>,
+    path_markers: Vec<PathMarker>,
     item_cells: HashSet<(usize, usize)>,
     hint_map_timer: f32,
     story: StoryPhase,
@@ -194,9 +202,14 @@ pub struct GameState {
     exit_star: Texture2D,
     hint_icon: Texture2D,
     trap_icon: Texture2D,
+    path_marker_icon: Texture2D,
     map_paper: Texture2D,
     player_heart_icon: Texture2D,
     hint_sound: Sound,
+    trap_sound: Sound,
+    lost_heart_sound: Sound,
+    gained_heart_sound: Sound,
+    path_marker_sound: Sound,
     exit_found_sound: Sound,
     paper_sound: Sound,
     rain_sound: Sound,
@@ -291,8 +304,13 @@ impl GameState {
         let map_paper = assets::load_map_paper_texture("assets/graphics_assets/mapimage.png");
         let player_heart_icon = assets::load_player_heart_texture("assets/graphics_assets/heart.png");
         let trap_icon = assets::load_trap_item_texture("assets/graphics_assets/trap_singleframe.png");
+        let path_marker_icon = assets::load_path_marker_texture("assets/graphics_assets/path_marker_icon.png");
 
         let hint_sound = load_sound("assets/audio_assets/hint_sound.wav").await.unwrap();
+        let trap_sound = load_sound("assets/audio_assets/trap_sound.wav").await.unwrap();
+        let lost_heart_sound = load_sound("assets/audio_assets/lost_heart_sound.wav").await.unwrap();
+        let gained_heart_sound = load_sound("assets/audio_assets/gained_heart_sound.wav").await.unwrap();
+        let path_marker_sound = load_sound("assets/audio_assets/path_marker_sound.wav").await.unwrap();
         let exit_found_sound = load_sound("assets/audio_assets/exit_found_sound.wav").await.unwrap();
         let paper_sound = load_sound("assets/audio_assets/paper_sound.wav").await.unwrap();
         let rain_sound = load_sound("assets/audio_assets/rain_sound.wav").await.unwrap();
@@ -302,6 +320,7 @@ impl GameState {
         let music_track = MusicTrack::None;
 
         let player = Player::new_at_cell_center(vec2(0.0, 0.0), 1.0, 0, 0, hat, 1, 1).await;
+        let player_health = player.health;
         let mut s = Self {
             maze: Maze::generate(1, 1),
             cols,
@@ -310,11 +329,13 @@ impl GameState {
             cell_size: 1.0,
             origin: vec2(0.0, 0.0),
             player,
+            player_health,
             start_cell: (0, 0),
             exit_cell: (0, 0),
             hints: vec![],
             traps: vec![],
             hearts: vec![],
+            path_markers: vec![],
             item_cells: HashSet::new(),
             hint_map_timer: 0.0,
             story: StoryPhase::new_run(),
@@ -331,9 +352,14 @@ impl GameState {
             exit_star,
             hint_icon,
             trap_icon,
+            path_marker_icon,
             map_paper,
             player_heart_icon,
             hint_sound,
+            trap_sound,
+            lost_heart_sound,
+            gained_heart_sound,
+            path_marker_sound,
             exit_found_sound,
             paper_sound,
             rain_sound,
@@ -724,6 +750,38 @@ impl GameState {
                     self.hint_map_timer = 5.0;
                 }
             }
+            for trap in &mut self.traps {
+                if !trap.collected && trap.cell == (px, py) && self.traps_settings_toggle {
+                    trap.collected = true;
+                    play_sound_once(&self.trap_sound);
+                    set_sound_volume(&self.trap_sound, self.sfx_volume as f32 / 10.0);
+                    self.player_health -= 1;
+                }
+            }
+            for heart in &mut self.hearts {
+                if !heart.collected && heart.cell == (px, py) && self.upgrades_settings_toggle {
+                    heart.collected = true;
+                    //play_sound_once(&self.gained_heart_sound);
+                    //set_sound_volume(&self.gained_heart_sound, self.sfx_volume as f32 / 10.0);
+                    self.player_health += 1;
+                }
+            }
+            for path_marker in &mut self.path_markers {
+                if !path_marker.collected && path_marker.cell == (px, py) {
+                    path_marker.collected = true;
+                    play_sound_once(&self.path_marker_sound);
+                    set_sound_volume(&self.path_marker_sound, self.sfx_volume as f32 / 10.0);
+                }
+            }
+            if self.player_health < self.player.health && self.player_health_settings_toggle {
+                self.player.health -= 1;
+                play_sound_once(&self.lost_heart_sound);
+                set_sound_volume(&self.lost_heart_sound, self.sfx_volume as f32 / 10.0);
+            } else if self.player_health > self.player.health && self.player_health_settings_toggle {
+                self.player.health += 1;
+                play_sound_once(&self.gained_heart_sound);
+                set_sound_volume(&self.gained_heart_sound, self.sfx_volume as f32 / 10.0);
+            }
             if (px, py) == self.exit_cell {
                 play_sound_once(&self.exit_found_sound);
                 set_sound_volume(&self.exit_found_sound, self.sfx_volume as f32 / 10.0);
@@ -761,6 +819,10 @@ impl GameState {
         if self.traps_settings_toggle {
             self.draw_traps(self.origin, self.cell_size, full_map_visible == false, &vis);
         }
+        if self.upgrades_settings_toggle {
+            self.draw_hearts(self.origin, self.cell_size, full_map_visible == false, &vis);
+        }
+        self.draw_path_markers(self.origin, self.cell_size, full_map_visible == false, &vis);
         self.story = StoryPhase::Restart;
     }
 
@@ -1581,6 +1643,10 @@ impl GameState {
         if self.traps_settings_toggle {
             self.draw_traps(vec2(mx, my), cc, true, &vis_all);
         }
+        if self.upgrades_settings_toggle {
+            self.draw_hearts(vec2(mx, my), cc, true, &vis_all);
+        }
+        self.draw_path_markers(vec2(mx, my), cc, true, &vis_all);
 
         let (px, py) = self.player.current_cell(self.origin, self.cell_size, cols, rows);
         let pcx = mx + px as f32 * cc + cc * 0.5;
@@ -1645,6 +1711,10 @@ impl GameState {
         if self.traps_settings_toggle {
             self.draw_traps(self.origin, cs, full_map_visible, &vis);
         }
+        if self.upgrades_settings_toggle {
+            self.draw_hearts(self.origin, cs, full_map_visible, &vis);
+        }
+        self.draw_path_markers(self.origin, cs, full_map_visible, &vis);
     }
 
     fn draw_hints(&self, draw_origin: Vec2, cell_size: f32, full_map_visible: bool, vis: &[bool]) {
@@ -1684,10 +1754,62 @@ impl GameState {
                 continue;
             }
             let size = cell_size * 0.6;
-            let x = draw_origin.x + trap.cell.0 as f32 * cell_size + (cell_size - size) * 0.6 - 0.4; // * 0.6 - 0.2;
-            let y = draw_origin.y + trap.cell.1 as f32 * cell_size + (cell_size - size) * 0.6 - 0.45;// * 0.6 - 0.5;
+            let x = draw_origin.x + trap.cell.0 as f32 * cell_size + (cell_size - size) * 0.6 - 0.4;
+            let y = draw_origin.y + trap.cell.1 as f32 * cell_size + (cell_size - size) * 0.6 - 0.5;
             draw_texture_ex(
                 &self.trap_icon,
+                x,
+                y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(size, size)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    fn draw_hearts(&self, draw_origin: Vec2, cell_size: f32, full_map_visible: bool, vis: &[bool]) {
+        for heart in &self.hearts {
+            if heart.collected {
+                continue;
+            }
+            if !full_map_visible
+                && !world_render::is_visible(vis, self.cols, heart.cell.0, heart.cell.1)
+            {
+                continue;
+            }
+            let size = cell_size * 0.6;
+            let x = draw_origin.x + heart.cell.0 as f32 * cell_size + (cell_size - size) * 0.6 - 0.4;
+            let y = draw_origin.y + heart.cell.1 as f32 * cell_size + (cell_size - size) * 0.6 - 0.45;
+            draw_texture_ex(
+                &self.player_heart_icon,
+                x,
+                y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(size, size)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    fn draw_path_markers(&self, draw_origin: Vec2, cell_size: f32, full_map_visible: bool, vis: &[bool]) {
+        for path_marker in &self.path_markers {
+            if path_marker.collected {
+                continue;
+            }
+            if !full_map_visible
+                && !world_render::is_visible(vis, self.cols, path_marker.cell.0, path_marker.cell.1)
+            {
+                continue;
+            }
+            let size = cell_size * 0.2;
+            let x = draw_origin.x + path_marker.cell.0 as f32 * cell_size + (cell_size - size) * 0.5;
+            let y = draw_origin.y + path_marker.cell.1 as f32 * cell_size + (cell_size - size) * 0.5;
+            draw_texture_ex(
+                &self.path_marker_icon,
                 x,
                 y,
                 WHITE,
@@ -2153,6 +2275,26 @@ impl GameState {
             })
             .collect();
         self.item_cells = build_traps.1;
+
+        let build_hearts = build_heart_cells(cols, rows, self.item_cells.clone());
+        self.hearts = build_hearts.0
+            .into_iter()
+            .map(|c| HeartItem {
+                cell: c,
+                collected: false,
+            })
+            .collect();
+        self.item_cells = build_hearts.1;
+
+        let build_path_markers = build_path_marker_cells(cols, rows, self.item_cells.clone());
+        self.path_markers = build_path_markers
+            .into_iter()
+            .map(|c| PathMarker {
+                cell: c,
+                collected: false,
+            })
+            .collect();
+        //self.item_cells = build_path_markers.1;
     }
 
     fn start_replay_from_record(&mut self, record: ProgressRecord) -> bool {
@@ -3624,7 +3766,41 @@ fn build_trap_cells(cols: usize, rows: usize, item_cells: HashSet<(usize, usize)
     (out, seen)
 }
 
-fn build_heart_cells(cols: usize, rows: usize) -> Vec<(usize, usize)> {
-    todo!();
+fn build_heart_cells(cols: usize, rows: usize, item_cells: HashSet<(usize, usize)>) -> (Vec<(usize, usize)>, HashSet<(usize, usize)>) {
     let tot_cells = cols * rows;
+    
+    let max_trap_cells = tot_cells / 42;
+    let num_traps = gen_range(8, max_trap_cells);
+
+    let mut seen = item_cells;
+    let mut out: Vec<(usize, usize)> = Vec::new();
+
+    let mut n = num_traps;
+    while n > 0 {
+        let x = gen_range(0, cols.saturating_sub(1));
+        let y = gen_range(0, rows.saturating_sub(1));
+
+        let cell = (x, y);
+
+        if cell.0 < cols && cell.1 < rows && seen.insert(cell) {
+            out.push(cell);
+            n -= 1;
+        }
+    }
+    (out, seen)
+}
+
+fn build_path_marker_cells(cols: usize, rows: usize, item_cells: HashSet<(usize, usize)>) -> Vec<(usize, usize)> {
+    let mut seen = item_cells;
+    let mut out: Vec<(usize, usize)> = Vec::new();
+
+    for c in 0..cols {
+        for r in 0..rows {
+            let cell = (c, r);
+            if cell.0 < cols && cell.1 < rows && seen.insert(cell) {
+                out.push(cell);
+            }
+        }
+    }
+    out
 }
